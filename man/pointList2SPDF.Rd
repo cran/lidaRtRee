@@ -11,7 +11,7 @@ pointList2SPDF(points.list, df = NULL, ...)
 
 \item{df}{data.frame. Optional data.frame to be associated to Spatial Polygons}
 
-\item{...}{arguments to be passed to \code{\link[sp]{SpatialPolygons}}, e.g. proj4string info}
+\item{...}{arguments to be passed to \code{\link[sp]{SpatialPolygons}}}
 }
 \value{
 an object of class \link[sp]{SpatialPolygons-class}, or class \link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
@@ -27,13 +27,10 @@ ellipses <- ellipses4Crown(c(0,10), c(0,10), c(2,2), c(3,4), c(2.5,3), c(2,3),
 ellipses1 <- pointList2SPDF(ellipses)
 ellipses1
 # Convert to Spatial object with data.frame
-ellipses2 <- pointList2SPDF(ellipses, df=data.frame(info=1:2),
-                            proj4string = sp::CRS(SRS_string = "EPSG:2154"))
-ellipses2
+ellipses2 <- pointList2SPDF(ellipses, df=data.frame(info=1:2))
 
 # draw ellipses
-sp::plot(ellipses1)
-sp::plot(ellipses2)
+sp::plot(ellipses2, col = ellipses2$info)
 }
 \seealso{
 \code{\link{ellipses4Crown}}

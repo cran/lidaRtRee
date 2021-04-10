@@ -1,6 +1,6 @@
 Package: lidaRtRee
 Type: Package
-Version: 3.0.2
+Version: 3.0.3
 Title: Forest Analysis with Airborne Laser Scanning (LiDAR) Data
 Date: 2021-04-01
 Author: Jean-Matthieu Monnet [aut, cre]
@@ -16,6 +16,6 @@ LazyData: TRUE
 RoxygenNote: 7.1.1
 Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2021-04-09 10:40:34 UTC; jean-matthieu
+Packaged: 2021-04-10 16:19:05 UTC; jean-matthieu
 Repository: CRAN
-Date/Publication: 2021-04-10 08:10:06 UTC
+Date/Publication: 2021-04-10 23:10:02 UTC

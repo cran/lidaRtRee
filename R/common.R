@@ -554,7 +554,7 @@ ellipses4Crown <- function(x, y, n, s, e, w, id=NULL, step=pi/12, angle.offset=0
 #'
 #' @param points.list list of dataframes of xy coordinates. The first and last coordinates in each dataframe must be the same
 #' @param df data.frame. Optional data.frame to be associated to Spatial Polygons
-#' @param ... arguments to be passed to \code{\link[sp]{SpatialPolygons}}, e.g. proj4string info
+#' @param ... arguments to be passed to \code{\link[sp]{SpatialPolygons}}
 #' @return an object of class \link[sp]{SpatialPolygons-class}, or class \link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
 #' @examples
 #' # Compute coordinates of polygons
@@ -564,13 +564,10 @@ ellipses4Crown <- function(x, y, n, s, e, w, id=NULL, step=pi/12, angle.offset=0
 #' ellipses1 <- pointList2SPDF(ellipses)
 #' ellipses1
 #' # Convert to Spatial object with data.frame
-#' ellipses2 <- pointList2SPDF(ellipses, df=data.frame(info=1:2),
-#'                             proj4string = sp::CRS(SRS_string = "EPSG:2154"))
-#' ellipses2
+#' ellipses2 <- pointList2SPDF(ellipses, df=data.frame(info=1:2))
 #' 
 #' # draw ellipses
-#' sp::plot(ellipses1)
-#' sp::plot(ellipses2)
+#' sp::plot(ellipses2, col = ellipses2$info)
 #' @seealso \code{\link{ellipses4Crown}}
 #' @export
 pointList2SPDF <- function(points.list, df=NULL, ...)
