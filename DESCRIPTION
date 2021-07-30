@@ -1,10 +1,11 @@
 Package: lidaRtRee
 Type: Package
-Version: 3.0.3
+Version: 3.1.0
 Title: Forest Analysis with Airborne Laser Scanning (LiDAR) Data
-Date: 2021-04-01
-Author: Jean-Matthieu Monnet [aut, cre]
-Maintainer: Jean-Matthieu Monnet <jean-matthieu.monnet@inrae.fr>
+Date: 2021-07-30
+Authors@R: c(
+    person("Jean-Matthieu", "Monnet", email = "jean-matthieu.monnet@inrae.fr", role = c("aut", "cre")),
+    person("Pascal", "Obstétar", email = "pascal.obstetar@onf.fr", role = c("ctb")))
 Description: Provides functions for forest analysis using airborne laser scanning (LiDAR remote sensing) data: tree detection (method 1 in Eysn et al. (2015) <doi:10.3390/f6051721>) and segmentation; forest parameters estimation and mapping with the area-based approach. It includes complementary steps for forest mapping: co-registration of field plots with LiDAR data (Monnet and Mermin (2014) <doi:10.3390/f5092307>); extraction of both physical (gaps, edges, trees) and statistical features from LiDAR data useful for e.g. habitat suitability modeling (Glad et al. (2020) <doi:10.1002/rse2.117>); model calibration with ground reference, and maps export. 
 URL: https://gitlab.irstea.fr/jean-matthieu.monnet/lidaRtRee
 BugReports: https://gitlab.irstea.fr/jean-matthieu.monnet/lidaRtRee/-/issues
@@ -15,7 +16,12 @@ License: GPL-3
 LazyData: TRUE
 RoxygenNote: 7.1.1
 Encoding: UTF-8
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2021-04-10 16:19:05 UTC; jean-matthieu
+Packaged: 2021-07-30 12:17:36 UTC; jean-matthieu
+Author: Jean-Matthieu Monnet [aut, cre],
+  Pascal Obstétar [ctb]
+Maintainer: Jean-Matthieu Monnet <jean-matthieu.monnet@inrae.fr>
 Repository: CRAN
-Date/Publication: 2021-04-10 23:10:02 UTC
+Date/Publication: 2021-07-30 12:50:02 UTC

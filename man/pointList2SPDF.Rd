@@ -7,27 +7,31 @@
 pointList2SPDF(points.list, df = NULL, ...)
 }
 \arguments{
-\item{points.list}{list of dataframes of xy coordinates. The first and last coordinates in each dataframe must be the same}
+\item{points.list}{list of dataframes of xy coordinates. The first and last 
+coordinates in each dataframe must be the same}
 
 \item{df}{data.frame. Optional data.frame to be associated to Spatial Polygons}
 
 \item{...}{arguments to be passed to \code{\link[sp]{SpatialPolygons}}}
 }
 \value{
-an object of class \link[sp]{SpatialPolygons-class}, or class \link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
+an object of class \link[sp]{SpatialPolygons-class}, or class 
+\link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
 }
 \description{
-Converts a list of points specifying polygons into a Spatial Polygons DataFrame object
+Converts a list of points specifying polygons into a Spatial Polygons DataFrame 
+object
 }
 \examples{
 # Compute coordinates of polygons
-ellipses <- ellipses4Crown(c(0,10), c(0,10), c(2,2), c(3,4), c(2.5,3), c(2,3),
-                           id=c("A", "B"))
+ellipses <- ellipses4Crown(c(0, 10), c(0, 10), c(2, 2), c(3, 4), c(2.5, 3), c(2, 3),
+  id = c("A", "B")
+)
 # Convert to Spatial object
 ellipses1 <- pointList2SPDF(ellipses)
 ellipses1
 # Convert to Spatial object with data.frame
-ellipses2 <- pointList2SPDF(ellipses, df=data.frame(info=1:2))
+ellipses2 <- pointList2SPDF(ellipses, df = data.frame(info = 1:2))
 
 # draw ellipses
 sp::plot(ellipses2, col = ellipses2$info)

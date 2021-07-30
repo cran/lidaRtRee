@@ -21,7 +21,8 @@ circle2Raster(X, Y, radius, resolution = 0.5, buffer = 0.5)
 A raster object
 }
 \description{
-Creates an empty raster which extents corresponds to the circle specified by center coordinates, radius and optional buffer size.
+Creates an empty raster which extents corresponds to the circle specified by 
+center coordinates, radius and optional buffer size.
 }
 \examples{
 circle2Raster(100, 100, 20, 1, 5)

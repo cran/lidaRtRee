@@ -33,29 +33,39 @@ polar2Projected(
 
 \item{convergence}{vector. meridian convergence values in radian}
 
-\item{diameter}{vector. diameters in meter (e.g. in case a radius should be added to the distance)}
+\item{diameter}{vector. diameters in meter (e.g. in case a radius should be 
+added to the distance)}
 }
 \value{
-A data.frame with easting, northing and altitude coordinates, and horizontal distance from centers to objects centers
+A data.frame with easting, northing and altitude coordinates, and 
+horizontal distance from centers to objects centers
 }
 \description{
-Computes projected coordinates (Easting, Northing, Altitude) from polar coordinates (Azimuth, Slope, Distance) and center position (Easting, Northing, Altitude). Magnetic declination and meridian convergence are optional parameters. In case distance is measured to the border of objects (e.g. trees), the diameter can be added to compute the coordinates of object center.
+Computes projected coordinates (Easting, Northing, Altitude) from polar 
+coordinates (Azimuth, Slope, Distance) and center position (Easting, Northing, 
+Altitude). Magnetic declination and meridian convergence are optional parameters. 
+In case distance is measured to the border of objects (e.g. trees), the diameter 
+can be added to compute the coordinates of object center.
 }
 \examples{
 # create data.frame of trees with polar coordinates and diameters
-trees <- data.frame (x=rep(c(0,10), each=2),
- y = rep(c(0,10),each=2),
- z=rep(c(0,2),each=2),
- azimuth=rep(c(0,pi/3)),
- dist=rep(c(2,4)),
- slope=rep(c(0,pi/6)),
- diameter.cm=c(15,20,25,30))
+trees <- data.frame(
+  x = rep(c(0, 10), each = 2),
+  y = rep(c(0, 10), each = 2),
+  z = rep(c(0, 2), each = 2),
+  azimuth = rep(c(0, pi / 3)),
+  dist = rep(c(2, 4)),
+  slope = rep(c(0, pi / 6)),
+  diameter.cm = c(15, 20, 25, 30)
+)
 trees
- 
- # compute projected coordinates
+
+# compute projected coordinates
 polar2Projected(trees$x, trees$y, trees$z, trees$azimuth, trees$dist,
- trees$slope, declination=0.03, convergence=0.02, trees$diameter.cm/100)
+  trees$slope,
+  declination = 0.03, convergence = 0.02, trees$diameter.cm / 100
+)
 }
 \seealso{
-\code{\link{plotTreeInventory}} for tree inventory display
+\code{\link{plot_tree_inventory}} for tree inventory display
 }

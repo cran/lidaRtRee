@@ -7,7 +7,8 @@
 points2DTM(.las, res = 1, xmin, xmax, ymin, ymax)
 }
 \arguments{
-\item{.las}{\code{\link[lidR]{LAS}} object or XYZ matrix/data.frame containing only ground points}
+\item{.las}{\code{\link[lidR]{LAS}} object or XYZ matrix/data.frame containing 
+only ground points}
 
 \item{res}{numeric. raster resolution}
 
@@ -23,16 +24,23 @@ points2DTM(.las, res = 1, xmin, xmax, ymin, ymax)
 A raster object
 }
 \description{
-Creates a Digital Terrain Model from LAS object or XYZ data. Raster extent is specified by the coordinates of lower left and upper right corners. Default extent covers the full range of points, and aligns on multiple values of the resolution. Cell value is compute as the bilinear interpolation at the cell center form an Delaunay triangulation. Relies on \code{\link[lidR]{grid_terrain}} with algorithm \code{\link[lidR]{tin}}. In case a LAS object is provided, only points classified as ground or water (2 or 9) will be used; a warning is issued when the raster output inherits the projection info from LAS input.
+Creates a Digital Terrain Model from LAS object or XYZ data. Raster extent is
+specified by the coordinates of lower left and upper right corners. Default 
+extent covers the full range of points, and aligns on multiple values of the 
+resolution. Cell value is compute as the bilinear interpolation at the cell 
+center form an Delaunay triangulation. Relies on \code{\link[lidR]{grid_terrain}} 
+with algorithm \code{\link[lidR]{tin}}. In case a LAS object is provided, only 
+points classified as ground or water (2 or 9) will be used; a warning is issued 
+when the raster output inherits the projection info from LAS input.
 }
 \examples{
-data(laschablais3)
+data(las_chablais3)
 
 # create digital terrain model with points classified as ground
-dtm <- points2DTM(laschablais3)
+dtm <- points2DTM(las_chablais3)
 
 # display raster
-raster::plot(dtm,asp=1)
+raster::plot(dtm, asp = 1)
 }
 \seealso{
 \code{\link{points2DSM}} for Digital Surface Model computation.

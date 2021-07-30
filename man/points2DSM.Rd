@@ -23,16 +23,19 @@ points2DSM(.las, res = 1, xmin, xmax, ymin, ymax)
 A raster object.
 }
 \description{
-Creates a Digital Surface Model from LAS object. Raster extent is specified by the coordinates of lower left and upper right corners. Default extent covers the full range of points, and aligns on multiple values of the resolution. Cell value is the maximum height of points contained in the cell.
+Creates a Digital Surface Model from LAS object. Raster extent is specified
+by the coordinates of lower left and upper right corners. Default extent covers
+ the full range of points, and aligns on multiple values of the resolution.
+ Cell value is the maximum height of points contained in the cell.
 }
 \examples{
-data(laschablais3)
+data(las_chablais3)
 
 # create a digital surface model with first-return points, resolution 0.5 m
-dsm <- points2DSM(lidR::filter_first(laschablais3), res=0.5)
+dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)
 
 # display raster
-raster::plot(dsm,asp=1)
+raster::plot(dsm, asp = 1)
 }
 \seealso{
 \code{\link{points2DTM}} for Digital Terrain Model computation.
