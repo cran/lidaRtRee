@@ -80,7 +80,17 @@ raster_metrics <-
     names(dummy)[1:2] <- c("X", "Y")
     # add id column or coordinates
     if (output == "raster") {
-      raster::rasterFromXYZ(dummy, res = c(res, res), crs = projinfo)
+      if (nrow(dummy) > 1) {
+        raster::rasterFromXYZ(dummy, res = c(res, res), crs = projinfo)
+      } else { # an error is returned by rasterFromXYZ when only one cell
+        # duplicate row
+        dummy2 <- rbind(dummy, dummy)
+        dummy2[2, c("X", "Y")] <- dummy2[1, c("X", "Y")] + res
+        # convert to raster
+        dummy2 <- raster::rasterFromXYZ(dummy2, res = c(res, res), crs = projinfo)
+        # crop to original extent
+        raster::crop(dummy2, raster::extent(dummy$X-res/2, dummy$X+res/2, dummy$Y-res/2, dummy$Y+res/2))
+      }
     } else {
       dummy
     }

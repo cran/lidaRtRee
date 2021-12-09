@@ -17,7 +17,11 @@
 #' @seealso \code{\link[lidR]{cloud_metrics}}, \code{\link[lidR]{stdmetrics}},
 #' \code{\link{aba_metrics}}
 #' @examples
-#' data(las_chablais3)
+#' # load LAS file
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
+#' # set projection
+#' lidR::projection(las_chablais3) <- 2154
 #'
 #' # extract four point clouds from LAS object
 #' llas <- list()
@@ -101,21 +105,21 @@ clouds_metrics <- function(llasn,
 #' @seealso \code{\link[lidR]{cloud_metrics}}, \code{\link[lidR]{stdmetrics}},
 #' \code{\link{clouds_metrics}}
 #' @examples
-#' data(las_chablais3)
+#' # load LAS file
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
 #'
-#' # extract four point clouds from LAS object
-#' llas <- list()
-#' llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
-#' llas[["B"]] <- lidR::clip_circle(las_chablais3, 974390, 6581680, 10)
-#' llas[["C"]] <- lidR::clip_circle(las_chablais3, 974350, 6581640, 10)
+#' # extract two point clouds from LAS object
+#' llas <- lidR::clip_circle(las_chablais3,
+#'                           c(974350, 974390),
+#'                           c(6581680, 6581680), 10)
 #' # normalize point clouds
 #' llas <- lapply(llas, function(x) {
 #'   lidR::normalize_height(x, lidR::tin())
 #' })
-#'
-#' # compute metrics
-#' clouds_metrics(llas, ~ aba_metrics(
-#'   Z, Intensity, ReturnNumber, Classification, 2, c(-Inf, 0, 2, 10, 20, +Inf)
+#' # computes metrics including strata 
+#' m1 <- clouds_metrics(llas, ~ aba_metrics(
+#'  Z, Intensity, ReturnNumber, Classification, 2
 #' ))
 #' @rdname aba_metrics
 #' @export
@@ -233,7 +237,10 @@ std_tree_metrics <- function(x, area_ha = NA) {
 #' terrain_points_metrics(XYZ)
 #' terrain_points_metrics(XYZ, centre = c(5, 5), r = 5)
 #' # with a LAS object
-#' data(las_chablais3)
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
+#' # set projection
+#' # lidR::projection(las_chablais3) <- 2154
 #' terrain_points <- lidR::filter_ground(las_chablais3)
 #' terrain_points_metrics(terrain_points)
 #' terrain_points_metrics(terrain_points, centre = c(974360, 6581650), r = 10)
@@ -332,27 +339,22 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #' @seealso \code{\link{tree_segmentation}}, \code{\link{tree_extraction}}, 
 #' \code{\link{std_tree_metrics}}
 #' @examples
-#' data(las_chablais3)
+#' # load LAS file
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
 #'
-#' # extract three point clouds of 10 m radius from LAS object
-#' llas <- list()
-#' llas[[1]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
-#' llas[[2]] <- lidR::clip_circle(las_chablais3, 974390, 6581680, 10)
-#' llas[[3]] <- lidR::clip_circle(las_chablais3, 974350, 6581640, 10)
+#' # extract two point clouds from LAS object
+#' llas <- lidR::clip_circle(las_chablais3,
+#'                           c(974350, 974390),
+#'                           c(6581680, 6581680), 10)
 #' # normalize point clouds
 #' llas <- lapply(llas, function(x) {
 #'   lidR::normalize_height(x, lidR::tin())
 #' })
 #'
-#' # compute tree metrics restricted to disks of radius 8 m.
-#' clouds_tree_metrics(llas,
-#'   cbind(c(974350, 974390, 974350), c(6581680, 6581680, 6581640)),
-#'   8,
-#'   res = 0.5
-#' )
-#'
 #' # compute metrics with user-defined function
 #' # number of detected trees between 20 and 30 meters and their mean height
+#' # restricted to disks of radius 8 m.
 #' user_func <- function(x) {
 #'   dummy <- x$h[which(x$h > 20 & x$h < 30)]
 #'   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))

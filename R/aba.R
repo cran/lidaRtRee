@@ -796,7 +796,7 @@ aba_predict <-
         }
       }
       # set prediction outside of strata to NA
-      dummy[[stratum_label]][metrics_map$stratum != stratum_id] <-
+      dummy[[stratum_label]][metrics_map[[stratum]] != stratum_id] <-
         NA
     }
     # merge strata results

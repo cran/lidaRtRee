@@ -1,5 +1,8 @@
 test_that("points2DSM", {
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  lidR::projection(las_chablais3) <- 2154
   # create a digital surface model with first-return points, resolution 0.5 m
   dsm <- points2DSM(.las = lidR::filter_first(las_chablais3), res = 0.5)
   expect_equal(class(dsm)[1], "RasterLayer")
@@ -9,7 +12,10 @@ test_that("points2DSM", {
 })
 
 test_that("points2DTM", {
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  # lidR::projection(las_chablais3) <- 2154
   # create digital terrain model with points classified as ground
   dtm <- points2DTM(las_chablais3)
   expect_equal(class(dtm)[1], "RasterLayer")

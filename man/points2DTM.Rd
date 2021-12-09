@@ -34,7 +34,11 @@ points classified as ground or water (2 or 9) will be used; a warning is issued
 when the raster output inherits the projection info from LAS input.
 }
 \examples{
-data(las_chablais3)
+# load LAS file
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
+# set projection
+# lidR::projection(las_chablais3) <- 2154
 
 # create digital terrain model with points classified as ground
 dtm <- points2DTM(las_chablais3)

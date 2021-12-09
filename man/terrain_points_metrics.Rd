@@ -41,7 +41,10 @@ XYZ$z <- 350 + 0.3 * XYZ$x + 0.1 * XYZ$y + rnorm(200, mean = 0, sd = 0.5)
 terrain_points_metrics(XYZ)
 terrain_points_metrics(XYZ, centre = c(5, 5), r = 5)
 # with a LAS object
-data(las_chablais3)
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
+# set projection
+# lidR::projection(las_chablais3) <- 2154
 terrain_points <- lidR::filter_ground(las_chablais3)
 terrain_points_metrics(terrain_points)
 terrain_points_metrics(terrain_points, centre = c(974360, 6581650), r = 10)

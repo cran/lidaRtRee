@@ -25,7 +25,11 @@ normalized point clouds). Calls the function \code{\link[lidR]{cloud_metrics}}
 on each element and then arranges the results in a data.frame.
 }
 \examples{
-data(las_chablais3)
+# load LAS file
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
+# set projection
+lidR::projection(las_chablais3) <- 2154
 
 # extract four point clouds from LAS object
 llas <- list()

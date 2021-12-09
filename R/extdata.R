@@ -10,9 +10,7 @@
 #'
 #' @docType data
 #'
-#' @usage data(las_chablais3)
-#'
-#' @format An object of class \code{\link[lidR]{LAS}}
+#' @format A compressed LAS file
 #'
 #' @keywords datasets
 #'
@@ -21,10 +19,11 @@
 #' @source Monnet J.-M. INRAE
 #'
 #' @examples
-#' data(las_chablais3)
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
+#' # set projection information
+#' lidR::projection(las_chablais3) <- 2154
 #' las_chablais3
-#' # display point cloud
-#' lidR::plot(las_chablais3)
 #' @name las_chablais3
 NULL
 "las_chablais3"

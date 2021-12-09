@@ -43,27 +43,22 @@ user-defined function (default is \code{\link{std_tree_metrics}})}
 }
 }
 \examples{
-data(las_chablais3)
+# load LAS file
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
 
-# extract three point clouds of 10 m radius from LAS object
-llas <- list()
-llas[[1]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
-llas[[2]] <- lidR::clip_circle(las_chablais3, 974390, 6581680, 10)
-llas[[3]] <- lidR::clip_circle(las_chablais3, 974350, 6581640, 10)
+# extract two point clouds from LAS object
+llas <- lidR::clip_circle(las_chablais3,
+                          c(974350, 974390),
+                          c(6581680, 6581680), 10)
 # normalize point clouds
 llas <- lapply(llas, function(x) {
   lidR::normalize_height(x, lidR::tin())
 })
 
-# compute tree metrics restricted to disks of radius 8 m.
-clouds_tree_metrics(llas,
-  cbind(c(974350, 974390, 974350), c(6581680, 6581680, 6581640)),
-  8,
-  res = 0.5
-)
-
 # compute metrics with user-defined function
 # number of detected trees between 20 and 30 meters and their mean height
+# restricted to disks of radius 8 m.
 user_func <- function(x) {
   dummy <- x$h[which(x$h > 20 & x$h < 30)]
   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))

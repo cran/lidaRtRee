@@ -19,7 +19,11 @@
 #' @return A raster object.
 #' @seealso \code{\link{points2DTM}} for Digital Terrain Model computation.
 #' @examples
-#' data(las_chablais3)
+#' # load LAS file
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
+#' # set projection
+#' lidR::projection(las_chablais3) <- 2154
 #'
 #' # create a digital surface model with first-return points, resolution 0.5 m
 #' dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)
@@ -44,7 +48,7 @@ points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
   r <- raster::raster()
   raster::extent(r) <- c(xmin, xmax, ymin, ymax)
   raster::res(r) <- res
-  raster::crs(r) <- .las@proj4string
+  raster::crs(r) <- lidR::projection(.las)
   # convert LAS coordinates to spatial data
   points <- as.data.frame(.las@data[, 1:2])
   sp::coordinates(points) <- c(1, 2)
@@ -76,7 +80,11 @@ points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
 #' @seealso \code{\link{points2DSM}} for Digital Surface Model computation.
 #' @return A raster object
 #' @examples
-#' data(las_chablais3)
+#' # load LAS file
+#' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+#' las_chablais3 <- lidR::readLAS(LASfile)
+#' # set projection
+#' # lidR::projection(las_chablais3) <- 2154
 #'
 #' # create digital terrain model with points classified as ground
 #' dtm <- points2DTM(las_chablais3)
@@ -97,16 +105,12 @@ points2DTM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
       ymin <- floor(min(.las@data$Y) / res) * res
       ymax <- ceiling(max(.las@data$Y) / res) * res
     }
-
-  # points <- as.matrix(.las@data[,c("X","Y","Z")])
-  # interpolation: value estimated at pixel center by bilinear interpolation
-  # mnt <- akima::interp(points[,1],points[,2],points[,3], xo=seq(xmin+res/2, xmax-res/2,by=res), yo=seq(ymax-res/2,ymin+res/2,by=-res),linear=TRUE,extrap=FALSE, duplicate="user", dupfun=function(x){min(x)})
-  #
-  # dtm = raster::raster(t(mnt[[3]]), xmn = xmin, xmx = xmax, ymn = ymin, ymx = ymax, crs=.las@proj4string)
   # create target raster
-  dtm <- raster::raster(xmn = xmin, xmx = xmax, ymn = ymin, ymx = ymax, resolution = res)
+  dtm <- raster::raster(xmn = xmin, xmx = xmax, ymn = ymin, ymx = ymax, resolution = res, crs = lidR::projection(.las))
+  # dtm.stars <- stars::st_as_stars(dtm)
+  # sf::st_crs(dtm.stars) <- lidR::projection(.las)
   dtm <- lidR::grid_terrain(.las, dtm, lidR::tin())
-  raster::crs(dtm) <- lidR::projection(.las)
+  # raster::projection(dtm) <- lidR::projection(.las)
   return(dtm)
 }
 

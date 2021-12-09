@@ -29,7 +29,11 @@ by the coordinates of lower left and upper right corners. Default extent covers
  Cell value is the maximum height of points contained in the cell.
 }
 \examples{
-data(las_chablais3)
+# load LAS file
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
+# set projection
+lidR::projection(las_chablais3) <- 2154
 
 # create a digital surface model with first-return points, resolution 0.5 m
 dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)

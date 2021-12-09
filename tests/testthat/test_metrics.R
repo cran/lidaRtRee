@@ -1,5 +1,8 @@
 test_that("clouds_metrics", {
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  lidR::projection(las_chablais3) <- 2154
   # extract four point clouds from LAS object
   llas <- list()
   llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
@@ -17,7 +20,10 @@ test_that("clouds_metrics", {
 })
 
 test_that("aba_metrics", {
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  lidR::projection(las_chablais3) <- 2154
   # extract four point clouds from LAS object
   llas <- list()
   llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
@@ -32,10 +38,10 @@ test_that("aba_metrics", {
     Z, Intensity, ReturnNumber, Classification, 2, c(-Inf, 0, 2, 10, 20, +Inf)
   ))
   testthat::expect_equal(res[1,1], 24.97)
-  res <- clouds_metrics(llas, ~ aba_metrics(
-    Z, Intensity, ReturnNumber, Classification, 200, c(-Inf, 0, 2, 10, 20, +Inf)
-  ))
-  testthat::expect_equal(class(res), "data.frame")
+  # res <- clouds_metrics(llas, ~ aba_metrics(
+  #   Z, Intensity, ReturnNumber, Classification, 20, c(-Inf, 0, 2, 10, 20, +Inf)
+  # ))
+  # testthat::expect_equal(class(res), "data.frame")
 })
 
 test_that("std_tree_metrics", {
@@ -60,7 +66,10 @@ test_that("terrain_points_metrics", {
   res2 <- terrain_points_metrics(XYZ, centre = c(5, 5), r = 5)
   testthat::expect_equal(res2[[1]], 351.4, tolerance = 0.01)
   # with a LAS object
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  # lidR::projection(las_chablais3) <- 2154
   terrain_points <- lidR::filter_ground(las_chablais3)
   set.seed(1234)
   res3 <- terrain_points_metrics(terrain_points)
@@ -71,7 +80,10 @@ test_that("terrain_points_metrics", {
 })
 
 test_that("clouds_tree_metrics", {
-  data(las_chablais3)
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  lidR::projection(las_chablais3) <- 2154
   # extract three point clouds of 10 m radius from LAS object
   llas <- list()
   llas[[1]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)

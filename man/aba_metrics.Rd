@@ -39,21 +39,21 @@ proposed by Bouvier et al.
 }
 }
 \examples{
-data(las_chablais3)
+# load LAS file
+LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+las_chablais3 <- lidR::readLAS(LASfile)
 
-# extract four point clouds from LAS object
-llas <- list()
-llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
-llas[["B"]] <- lidR::clip_circle(las_chablais3, 974390, 6581680, 10)
-llas[["C"]] <- lidR::clip_circle(las_chablais3, 974350, 6581640, 10)
+# extract two point clouds from LAS object
+llas <- lidR::clip_circle(las_chablais3,
+                          c(974350, 974390),
+                          c(6581680, 6581680), 10)
 # normalize point clouds
 llas <- lapply(llas, function(x) {
   lidR::normalize_height(x, lidR::tin())
 })
-
-# compute metrics
-clouds_metrics(llas, ~ aba_metrics(
-  Z, Intensity, ReturnNumber, Classification, 2, c(-Inf, 0, 2, 10, 20, +Inf)
+# computes metrics including strata 
+m1 <- clouds_metrics(llas, ~ aba_metrics(
+ Z, Intensity, ReturnNumber, Classification, 2
 ))
 }
 \references{
