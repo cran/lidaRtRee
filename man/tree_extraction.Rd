@@ -7,22 +7,23 @@
 tree_extraction(r_dem_nl, r_maxi, r_dem_w, r_mask = NULL)
 }
 \arguments{
-\item{r_dem_nl}{raster object. raster of canopy height model, preferably filtered to avoid effect of holes on volume and surface computation}
+\item{r_dem_nl}{SpatRaster object. raster of canopy height model, preferably filtered to avoid effect of holes on volume and surface computation}
 
-\item{r_maxi}{raster object. raster positive values at local maxima}
+\item{r_maxi}{SpatRaster object. raster with positive values at local maxima}
 
-\item{r_dem_w}{raster object. segmented raster}
+\item{r_dem_w}{SpatRaster object. segmented raster}
 
-\item{r_mask}{raster object. only segments which maxima are inside the mask are extracted}
+\item{r_mask}{SpatRaster object. only segments which maxima are inside the mask are extracted. Values should be NA outside the mask, 1 inside.}
 }
 \value{
-A spatial data.frame with tree id, local maximum stats (height, dominance radius), segment stats (surface and volume).
+A sf collection of POINTs with 7 fields: tree id, local maximum stats (height, dominance radius), segment stats (surface and volume), coordinates (x and y).
 }
 \description{
 creates a dataframe with segment id, height and coordinates of maxima, surface and volume, computed from three images: initial, local maxima and segmented, obtained with \code{\link{tree_segmentation}}
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # tree segmentation
 segments <- tree_segmentation(chm_chablais3)
@@ -35,14 +36,14 @@ trees <- tree_extraction(
 trees
 
 # plot initial image
-raster::plot(chm_chablais3)
+terra::plot(chm_chablais3)
 
 # add treetop positions
-sp::plot(trees, cex = trees$h / 20, add = TRUE, pch = 1)
+plot(trees["h"], add = TRUE, cex = trees$h/20, col = "black")
 \donttest{
 # add segment contours (vectorization is slow)
-contours <- raster::rasterToPolygons(segments$segments_id, dissolve = TRUE)
-sp::plot(contours, add = TRUE, border = "white")
+contours <- terra::as.polygons(segments$segments_id)
+terra::plot(contours, add = TRUE, border = "white")
 }
 
 }

@@ -17,7 +17,7 @@ positions}
 
 \item{chm}{raster object. raster for background display}
 
-\item{plot_border}{Spatialpolygon. plot boundaries for display}
+\item{plot_border}{sf or SpatVector object. plot boundaries for display}
 
 \item{...}{Additional arguments to be used by \code{\link{plot}}}
 }

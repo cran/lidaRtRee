@@ -7,14 +7,14 @@
 add_vegetation_indices(r, all = FALSE)
 }
 \arguments{
-\item{r}{raster stack or data.frame. Should contain bands or columns with
+\item{r}{raster or data.frame. Should contain bands or columns with
 names nir, r, g}
 
 \item{all}{boolean. indicates whether all indices should be computed;
 default:FALSE, only grvi, sr and ndvi are calculated}
 }
 \value{
-a RasterStack or data.frame with added bands or columns
+a raster or data.frame with added bands or columns
 }
 \description{
 Computes vegetations indices from the Red, Green and Infra-Red bands of an IRC

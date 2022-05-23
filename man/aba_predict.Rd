@@ -4,22 +4,31 @@
 \alias{aba_predict}
 \title{Mapping of ABA prediction models}
 \usage{
-aba_predict(model_aba, metrics_map, stratum = NULL, add_error = FALSE)
+aba_predict(
+  model_aba,
+  metrics_map,
+  stratum = NULL,
+  add_error = FALSE,
+  pkg = "terra"
+)
 }
 \arguments{
 \item{model_aba}{model returned by \code{\link{aba_build_model}} or
 \code{\link{aba_combine_strata}}}
 
-\item{metrics_map}{RasterStack. metrics returned e.g by
-\code{\link[lidR]{grid_metrics}}}
+\item{metrics_map}{raster. metrics returned e.g by
+\code{\link[lidR]{pixel_metrics}}}
 
 \item{stratum}{string. indicates which layer of metrics.map contains the
 \code{stratum} in case of a stratified \code{aba.model}. The layer should have a RAT
-including a column with the same name (see \code{\link[raster]{is.factor}}).}
+including a column with the same name (see \code{\link[terra]{is.factor}}).}
 
 \item{add_error}{boolean. indicates whether errors sampled from a normal distribution
 N(0, sigma(residuals)) should be added to fitted values; implemented only for
 \code{log} transformation case}
+
+\item{pkg}{raster output format. Use pkg = "terra|raster|stars" to get an output in SpatRaster, RasterLayer
+or stars format.}
 }
 \value{
 a raster of predictions obtained by applying the model \code{aba_build_model}
@@ -27,7 +36,7 @@ to the observations in \code{metrics_map}
 }
 \description{
 Applies calibrated area-based prediction models output of
-\code{\link{aba_build_model}} to a RasterStack of metrics to obtain a raster of
+\code{\link{aba_build_model}} to a raster of metrics to obtain a raster of
 predictions
 }
 \examples{
@@ -40,11 +49,11 @@ model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
 # build example raster to apply model
 quatre_montagnes$X <- rep(1:8, 12)
 quatre_montagnes$Y <- rep(1:12, each = 8)
-metrics_map <- raster::rasterFromXYZ(quatre_montagnes[, c(2, 3, 9:76)])
+metrics_map <- terra::rast(quatre_montagnes[, c(2, 3, 9:76)], type = "xyz")
 predict_map <- aba_predict(model_aba, metrics_map)
 
 # plot map
-raster::plot(predict_map, main = "predictions")
+terra::plot(predict_map, main = "predictions")
 }
 \seealso{
 \link{aba_build_model} for model fitting and \link{aba_combine_strata}

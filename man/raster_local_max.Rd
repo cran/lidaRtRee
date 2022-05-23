@@ -7,7 +7,7 @@
 raster_local_max(r, dm = 2, med1 = 1, med2 = 2, quanta = 0.75, quantb = 0.5)
 }
 \arguments{
-\item{r}{raster. typically output of \code{\link{rasters_moving_cor}}}
+\item{r}{SpatRaster. typically output of \code{\link{rasters_moving_cor}}}
 
 \item{dm}{numeric. minimum distance between two local maxima in meters}
 
@@ -37,28 +37,27 @@ maximum.
 }
 \examples{
 # create raster
-r_b <- raster::raster()
-raster::extent(r_b) <- c(0, 40, 0, 40)
-raster::res(r_b) <- 1
-xy <- raster::xyFromCell(r_b, 1:length(r_b))
+r_b <- terra::rast(xmin = 0, xmax = 40, ymin =0 , ymax = 40,
+resolution = 1, crs = NA)
+xy <- terra::xyFromCell(r_b, 1:(nrow(r_b) * ncol(r_b)))
 
 # add Gaussian surfaces
 z1 <- 1.5 * exp(-((xy[, 1] - 22)^2 + (xy[, 2] - 22)^2 / 2) / 5)
 z2 <- exp(-((xy[, 1] - 20)^2 + (xy[, 2] - 22)^2 / 2) / 3)
 z3 <- 1.5 * exp(-((xy[, 1] - 17)^2 + (xy[, 2] - 17)^2 / 2) / 5)
-r_b <- raster::rasterFromXYZ(cbind(xy, z1 + z2 + z3))
+r_b <- terra::rast(cbind(xy, z1 + z2 + z3), type = "xyz")
 
 # create small raster
-r_s <- raster::crop(r_b, raster::extent(c(15, 25, 15, 25)))
+r_s <- terra::crop(r_b, terra::ext(c(15, 25, 15, 25)))
 # offset raster by (-2, -2)
-raster::extent(r_s) <- c(13, 23, 13, 23)
+terra::ext(r_s) <- c(13, 23, 13, 23)
 
 rr <- rasters_moving_cor(r_b, r_s, buffer = 6, step = 1)
 loc_max <- raster_local_max(rr)
 loc_max
 
 # plot raster
-raster::plot(rr)
+terra::plot(rr)
 # add location of two local maxima
 graphics::points(loc_max[1, c("dx1", "dx2")], loc_max[1, c("dy1", "dy2")],
   cex = c(1, 0.5), pch = 3

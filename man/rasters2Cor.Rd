@@ -4,14 +4,14 @@
 \alias{rasters2Cor}
 \title{Correlation between two rasters}
 \usage{
-rasters2Cor(raster.b, raster_s, mask = NULL, small.SC = TRUE)
+rasters2Cor(raster_b, raster_s, mask = NULL, small.SC = TRUE)
 }
 \arguments{
-\item{raster.b}{raster. raster to correlate with largest extent}
+\item{raster_b}{SpatRaster. raster to correlate with largest extent}
 
-\item{raster_s}{raster. raster to correlate with smallest extent}
+\item{raster_s}{SpatRaster. raster to correlate with smallest extent}
 
-\item{mask}{raster. mask of area to correlate}
+\item{mask}{SpatRaster. mask of area to correlate}
 
 \item{small.SC}{boolean. is the small raster already standardized and 
 centered ?}
@@ -25,25 +25,24 @@ one.
 }
 \examples{
 # create raster
-r_b <- raster::raster()
-raster::extent(r_b) <- c(0, 40, 0, 40)
-raster::res(r_b) <- 1
-xy <- raster::xyFromCell(r_b, 1:length(r_b))
+r_b <- terra::rast(xmin = 0, xmax = 40, ymin =0 , ymax = 40,
+resolution = 1, crs = NA)
+xy <- terra::xyFromCell(r_b, 1:(nrow(r_b) * ncol(r_b)))
 
 # add Gaussian surface and noise
 z <- 3 * exp(-((xy[, 1] - 20)^2 + (xy[, 2] - 20)^2 / 2) / 6)
-r_b <- raster::rasterFromXYZ(cbind(xy, z))
+r_b <- terra::rast(cbind(xy, z), type = "xyz")
 
 # create circular mask of radius 5
 z_mask <- (xy[, 1] - 20)^2 + (xy[, 2] - 20)^2 < 5^2
-r_mask <- raster::rasterFromXYZ(cbind(xy, z_mask))
+r_mask <- terra::rast(cbind(xy, z_mask), type = "xyz")
 
 # create small raster of size 20
-r_s <- raster::crop(r_b, raster::extent(c(10, 30, 10, 30)))
+r_s <- terra::crop(r_b, terra::ext(c(10, 30, 10, 30)))
 
 # add noise to small raster
-raster::values(r_s) <- raster::values(r_s) + rnorm(length(r_s), 0, 0.5)
-r_mask <- raster::crop(r_mask, raster::extent(c(10, 30, 10, 30)))
+terra::values(r_s) <- terra::values(r_s) + rnorm(ncol(r_s) * nrow(r_s), 0, 0.5)
+r_mask <- terra::crop(r_mask, terra::ext(c(10, 30, 10, 30)))
 
 # compute correlation on masked area where signal to noise ratio is lower
 rasters2Cor(r_b, r_s, r_mask, small.SC = FALSE)
@@ -52,11 +51,11 @@ rasters2Cor(r_b, r_s, r_mask, small.SC = FALSE)
 rasters2Cor(r_b, r_s, small.SC = FALSE)
 
 # display large raster
-raster::plot(r_b, main = "Large raster")
+terra::plot(r_b, main = "Large raster")
 # display small raster
-raster::plot(r_s, main = "Small raster")
+terra::plot(r_s, main = "Small raster")
 # display mask
-raster::plot(r_mask, main = "Computation mask")
+terra::plot(r_mask, main = "Computation mask")
 }
 \seealso{
 \code{\link{rasters_moving_cor}} to compute correlation between rasters

@@ -2,18 +2,18 @@
 % Please edit documentation in R/aba.R
 \name{clean_raster}
 \alias{clean_raster}
-\title{Applies thresholds and mask to a rasterLayer object}
+\title{Applies thresholds and mask to a raster object}
 \usage{
-clean_raster(rast, minmax = c(-Inf, +Inf), mask = NULL)
+clean_raster(r, minmax = c(-Inf, +Inf), mask = NULL)
 }
 \arguments{
-\item{rast}{raster object.}
+\item{r}{raster object. RasterLayer and SpatRaster are supported.}
 
 \item{minmax}{vector of two numeric values. minimum and maximum thresholds to
-apply to `rast` values}
+apply to `r` values}
 
 \item{mask}{raster object. mask to be applied (multiplication with input raster
-`rast`)}
+`r`)}
 }
 \value{
 a raster object
@@ -28,24 +28,23 @@ Applies a lower and upper thresholds to the values of the input raster. If the
 # load data
 data(quatre_montagnes)
 # build model
-model_aba <- aba_build_model(quatre_montagnes$G_m2_ha,
-  quatre_montagnes[, 9:76],
+model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
   transform = "boxcox"
 )
 # build example raster to apply model
 quatre_montagnes$X <- rep(1:8, 12)
 quatre_montagnes$Y <- rep(1:12, each = 8)
-metrics_map <- raster::rasterFromXYZ(quatre_montagnes[, c(2, 3, 9:76)])
+metrics_map <- terra::rast(quatre_montagnes[, c(2, 3, 9:76)], type = "xyz")
 predict_map <- aba_predict(model_aba, metrics_map)
 # create raster mask
 mask <- predict_map
 # set values to 1 or NA
-raster::values(mask) <- rep(c(1, 1, NA), each = 32)
+terra::values(mask) <- rep(c(1, 1, NA), each = 32)
 # apply thresholds and mask
 predict_map_clean <- clean_raster(predict_map, c(40, 70), mask)
 
 # plot maps
-raster::plot(predict_map, main = "Predictions")
-raster::plot(mask, main = "Mask", legend = FALSE)
-raster::plot(predict_map_clean, main = "Cleaned predictions")
+terra::plot(predict_map, main = "Predictions")
+terra::plot(mask, main = "Mask", legend = FALSE)
+terra::plot(predict_map_clean, main = "Cleaned predictions")
 }

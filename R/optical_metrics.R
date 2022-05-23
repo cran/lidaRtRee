@@ -9,11 +9,11 @@
 #' image and adds them as additionnal bands or columns. Indices are listed on
 #' \url{https://www.l3harrisgeospatial.com/docs/broadbandgreenness.html}
 #'
-#' @param r raster stack or data.frame. Should contain bands or columns with
+#' @param r raster or data.frame. Should contain bands or columns with
 #' names nir, r, g
 #' @param all boolean. indicates whether all indices should be computed;
 #' default:FALSE, only grvi, sr and ndvi are calculated
-#' @return a RasterStack or data.frame with added bands or columns
+#' @return a raster or data.frame with added bands or columns
 #' @examples
 #' df <- data.frame(nir = c(110, 150, 20), r = c(25, 50, 30), g = c(10, 60, 10))
 #' add_vegetation_indices(df, all = TRUE)

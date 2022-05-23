@@ -14,7 +14,7 @@ dem_filtering(
 }
 \arguments{
 \item{dem}{cimg object (e.g. obtained with \code{\link[imager]{as.cimg}}) or 
-Raster Layer object (e.g. obtained with \code{\link[raster]{raster}})}
+SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})}
 
 \item{nl_filter}{string. type of non-linear filter to apply: "None", "Closing" 
 or "Median"}
@@ -33,7 +33,7 @@ in image which values are between thresholds indicated in lines \code{i} and
 values before filtering to avoid border effects}
 }
 \value{
-A list of two cimg or a RasterStack objects: image after non-linear 
+A list of two cimg objects or a SpatRaster object with image after non-linear 
 filter and image after both filters
 }
 \description{
@@ -47,6 +47,7 @@ applied on both dimensions). Value-dependent smoothing is possible
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # filtering with median and Gaussian smoothing
 im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigmap = 0.8)
@@ -59,16 +60,16 @@ im2 <- dem_filtering(chm_chablais3,
 )
 
 # plot original image
-raster::plot(chm_chablais3, main = "Initial image")
+terra::plot(chm_chablais3, main = "Initial image")
 
 # plot image after median filter
-raster::plot(im$non_linear_image, main = "Median filter")
+terra::plot(im$non_linear_image, main = "Median filter")
 
 # plot image after median and Gaussian filters
-raster::plot(im$smoothed_image, main = "Smoothed image")
+terra::plot(im$smoothed_image, main = "Smoothed image")
 
 # plot image after median and value-dependent Gaussian filters
-raster::plot(im2$smoothed_image, main = "Value-dependent smoothing")
+terra::plot(im2$smoothed_image, main = "Value-dependent smoothing")
 }
 \seealso{
 \code{\link{maxima_detection}}, filters of imager package: 

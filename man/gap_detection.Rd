@@ -44,7 +44,7 @@ some pixels of a gap fulfill the distance criterion, the connected pixels that
 fulfill the height criterion are also integrated to it.}
 }
 \value{
-A list of three raster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
+A list of three SpatRaster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
 }
 \description{
 Performs gaps detection in a canopy height model. Function
@@ -59,6 +59,7 @@ distance to surrounding vegetation is tested with morphological closings
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # fill NA values in canopy height model
 chm_chablais3[is.na(chm_chablais3)] <- 0
@@ -79,18 +80,18 @@ gaps2 <- gap_detection(chm_chablais3, ratio = NULL, gap_max_height = 1,
 min_gap_surface = 0)
 
 # gap id and corresponding surface for third detection parameters
-table(raster::values(gaps2$gap_id)) * raster::res(gaps2$gap_id)[1]^2
+table(terra::values(gaps2$gap_id)) * terra::res(gaps2$gap_id)[1]^2
 
 # plot original image
-raster::plot(chm_chablais3, main = "Initial image")
+terra::plot(chm_chablais3, main = "Initial image")
 
 # plot binary image of gaps
-raster::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
-raster::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
-raster::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
+terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
+terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
 
 # plot filtered CHM
-raster::plot(gaps2$filled_chm, main = "Filtered CHM")
+terra::plot(gaps2$filled_chm, main = "Filtered CHM")
 }
 \seealso{
 \code{\link{dem_filtering}}, \code{\link{edge_detection}}

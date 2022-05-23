@@ -58,5 +58,5 @@ clouds_metrics(llas, func = ~ user_func(Z, ReturnNumber, 10))
 }
 \seealso{
 \code{\link[lidR]{cloud_metrics}}, \code{\link[lidR]{stdmetrics}},
-\code{\link{aba_metrics}}
+\code{\link{aba_metrics}}, \code{\link[lidR]{pixel_metrics}}
 }

@@ -8,12 +8,14 @@ attributes based on XY locations}
 raster_metrics(
   r,
   res = 20,
-  fun = function(x) {     data.frame(mean = mean(x$layer), sd = stats::sd(x$layer)) },
+  fun = function(x) {
+     data.frame(mean = mean(x[, 3]), sd = stats::sd(x[, 3]))
+ },
   output = "raster"
 )
 }
 \arguments{
-\item{r}{raster object or data.frame with xy coordinates in two first columns}
+\item{r}{SpatRaster object, data.frame with xy coordinates in two first columns, or POINT \code{\link[sf]{sf}} spatial object}
 
 \item{res}{numeric. Resolution of the aggregation raster, should be a multiple
 of r resolution if a raster is provided}
@@ -22,20 +24,21 @@ of r resolution if a raster is provided}
 the values contained in the initial raster (use x$layer to access raster
 values) / data.frame (use x$colum_name to access values)}
 
-\item{output}{string. indicates the class of output object "raster" or "data.frame"}
+\item{output}{string. indicates the class of output object "raster" for a SpatRaster or "data.frame"}
 }
 \value{
 a data.frame with the XY center coordinates of the aggregated cells,
-and the values computed with the user-specified function or a Raster object
+and the values computed with the user-specified function, or a SpatRaster object
 }
 \description{
-Compute statistics by aggregating a raster at lower resolution. Aggregation
+Computes statistics by aggregating a raster at lower resolution. Aggregation
 groups are larger cells, new values are computed by applying a user-specified
 function to original cells contained in the larger cells. Results are provided
-as a data.frame which also contains the XY coordinates of the larger cells.
+as a data.frame with the XY coordinates of the larger cells, or as SpatRaster.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # raster metrics from raster
 metrics1 <- raster_metrics(chm_chablais3, res = 10)
@@ -58,7 +61,7 @@ metrics2 <- raster_metrics(df,
 summary(metrics2)
 
 # display raster metrics
-raster::plot(metrics1)
+terra::plot(metrics1)
 # display data.frame metrics
-raster::plot(raster::rasterFromXYZ(metrics2))
+terra::plot(terra::rast(metrics2, type = "xyz"))
 }

@@ -51,10 +51,11 @@ llas <- lidR::clip_circle(las_chablais3,
 llas <- lapply(llas, function(x) {
   lidR::normalize_height(x, lidR::tin())
 })
-# computes metrics including strata 
-m1 <- clouds_metrics(llas, ~ aba_metrics(
+# computes metrics 
+m <- clouds_metrics(llas, ~ aba_metrics(
  Z, Intensity, ReturnNumber, Classification, 2
 ))
+head(m[,1:5])
 }
 \references{
 Bouvier et al. 2015. Generalizing predictive models of forest

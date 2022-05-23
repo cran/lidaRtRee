@@ -7,12 +7,12 @@
 boxcox_itr(x, lambda)
 }
 \arguments{
-\item{x}{vector or RasterLayer. values to be transformed}
+\item{x}{vector or raster values to be transformed}
 
 \item{lambda}{numeric. parameter of Box-Cox transformation}
 }
 \value{
-a vector or RasterLayer of transformed values
+a vector or raster of transformed values
 }
 \description{
 Inverse Box-Cox transformation

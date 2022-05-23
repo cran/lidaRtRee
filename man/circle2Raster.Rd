@@ -4,7 +4,7 @@
 \alias{circle2Raster}
 \title{Raster corresponding to circle extent}
 \usage{
-circle2Raster(X, Y, radius, resolution = 0.5, buffer = 0.5)
+circle2Raster(X, Y, radius, resolution = 0.5, buffer = 0.5, ...)
 }
 \arguments{
 \item{X}{numeric. easting coordinate of plot center in meters}
@@ -16,9 +16,11 @@ circle2Raster(X, Y, radius, resolution = 0.5, buffer = 0.5)
 \item{resolution}{numeric. raster resolution in meters}
 
 \item{buffer}{numeric. buffer to be added to plot radius in meters}
+
+\item{...}{other parameters to pass to \code{\link[terra]{rast}} (e.g. crs)}
 }
 \value{
-A raster object
+A SpatRaster object
 }
 \description{
 Creates an empty raster which extents corresponds to the circle specified by 

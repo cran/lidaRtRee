@@ -8,10 +8,10 @@ maxima_detection(dem, dem.res = 1, max.width = 21, jitter = TRUE)
 }
 \arguments{
 \item{dem}{cimg object (e.g. as created by \code{\link[imager]{cimg}}) or 
-RasterLayer object (e.g. obtained with \code{\link[raster]{raster}})}
+SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})}
 
-\item{dem.res}{numeric. image resolution, in case \code{dem} is a rasterLayer 
-object, \code{dem.res} is extracted from the object by \code{\link[raster]{res}}}
+\item{dem.res}{numeric. image resolution, in case \code{dem} is a SpatRaster 
+object, \code{dem.res} is extracted from the object by \code{\link[terra]{res}}}
 
 \item{max.width}{numeric. maximum kernel width in pixel to check for local 
 maximum}
@@ -20,7 +20,7 @@ maximum}
 avoid the adjacent maxima due to the adjacent pixels with equal values}
 }
 \value{
-A cimg object or RasterLayer object which values are the radius (n) 
+A cimg object or SpatRaster object which values are the radius (n) 
 in meter of the square window (width 2n+1) where the center pixel is global 
 maximum
 }
@@ -32,15 +32,16 @@ due to neighbor pixels with identical value.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # maxima detection
 maxi <- maxima_detection(chm_chablais3)
 
 # plot original image
-raster::plot(chm_chablais3, main = "Initial image")
+terra::plot(chm_chablais3, main = "Initial image")
 
 # plot maxima image
-raster::plot(maxi, main = "Local maxima")
+terra::plot(maxi, main = "Local maxima")
 }
 \seealso{
 \code{\link{dem_filtering}}, \code{\link{maxima_selection}}

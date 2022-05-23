@@ -7,12 +7,12 @@
 seg_adjust(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.maxvalue = 5)
 }
 \arguments{
-\item{dem_w}{cimg or rasterLayer object. image with segments id, without 0 
+\item{dem_w}{cimg or SpatRaster object. image with segments id, without 0 
 values}
 
-\item{dem_wh}{cimg or rasterLayer object. image with max value inside segment}
+\item{dem_wh}{cimg or SpatRaster object. image with max value inside segment}
 
-\item{dem_nl}{cimg or rasterLayer object. image with initial values}
+\item{dem_nl}{cimg or SpatRaster object. image with initial values}
 
 \item{prop}{numeric. proportional threshold for removal of pixels which initial 
 values are lower than the max height of the segment (\code{dem_nl < prop x dem_wh})}
@@ -24,7 +24,7 @@ are lower (\code{dem_nl < min.value})}
 maximum value height is smaller to the threshold (\code{dem_wh < min.maxvalue})}
 }
 \value{
-A cimg or rasterLayer object: image with modified segments.
+A cimg or SpatRaster object: image with modified segments.
 }
 \description{
 in a segmented image, removes from segments the pixels which values in a 
@@ -33,6 +33,7 @@ segment. Removed pixels are attributed 0 value.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # median filter
 chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -61,12 +62,12 @@ seg_modif2 <- seg_adjust(seg_selected_maxi , max_in_segment,
 )
 
 # plot initial segmented image
-seg_selected_maxi [seg_selected_maxi == 0] <- NA
-raster::plot(seg_selected_maxi \%\% 8, main = "Initial segments", col = rainbow(8))
-seg_modif1[seg_modif1 == 0] <- NA
-raster::plot(seg_modif1 \%\% 8, main = "Modified segments 1", col = rainbow(8))
+# seg_selected_maxi[seg_selected_maxi == 0] <- NA
+terra::plot(seg_selected_maxi \%\% 8, main = "Initial segments", col = rainbow(8))
+# seg_modif1[seg_modif1 == 0] <- NA
+terra::plot(seg_modif1 \%\% 8, main = "Modified segments 1", col = rainbow(8))
 seg_modif2[seg_modif2 == 0] <- NA
-raster::plot(seg_modif2 \%\% 8, main = "Modified segments 2", col = rainbow(8))
+terra::plot(seg_modif2 \%\% 8, main = "Modified segments 2", col = rainbow(8))
 }
 \seealso{
 \code{\link{maxima_detection}}, \code{\link{maxima_selection}}

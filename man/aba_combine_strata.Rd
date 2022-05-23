@@ -18,7 +18,7 @@ a list with three elements
 \itemize{
 \item \code{model}: a list of regression models corresponding to each stratum
  (output from \code{\link[stats]{lm}}),
-\item \code{stats}:model statistics of each stratum-specific model (as in
+\item \code{stats}: model statistics of each stratum-specific model (as in
 \code{\link{aba_build_model}}) plus one line corresponding to statistics for all
 strata (COMBINED)
 \item \code{values}: data.frame with observed and values predicted in

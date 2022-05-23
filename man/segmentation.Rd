@@ -7,20 +7,21 @@
 segmentation(maxi, dem_nl)
 }
 \arguments{
-\item{maxi}{cimg or rasterLayer object. image with seed points (e.g. from 
+\item{maxi}{cimg or SpatRaster object. image with seed points (e.g. from 
 \code{\link{maxima_detection}} or \code{\link{maxima_selection}})}
 
-\item{dem_nl}{cimg or rasterLayer object. image for seed propagation 
+\item{dem_nl}{cimg or SpatRaster object. image for seed propagation 
 (typically initial image used for maxima detection).}
 }
 \value{
-A cimg object or rasterlayer object with segments id
+A cimg object or SpatRaster object with segments id
 }
 \description{
-performs a seed-based watershed segmentation (wrapper for imager::watershed)
+performs a seed-based watershed segmentation (wrapper for \code{\link[imager]{watershed}})
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # median filter
 chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -39,15 +40,15 @@ seg_maxi <- segmentation(maxi, chm_chablais3)
 seg_selected_maxi <- segmentation(selected_maxi, chm_chablais3)
 
 # plot original image
-raster::plot(chm_chablais3, main = "Median filter")
+terra::plot(chm_chablais3, main = "Median filter")
 
 # plot segmented image
 # replace segment with id 0 (not a tree) with NA
 seg_maxi[seg_maxi == 0] <- NA
-raster::plot(seg_maxi \%\% 8, main = "Segments, no maxima selection", 
+terra::plot(seg_maxi \%\% 8, main = "Segments, no maxima selection", 
 col = rainbow(8))
 seg_selected_maxi [seg_selected_maxi == 0] <- NA
-raster::plot(seg_selected_maxi \%\% 8, main = "Segments, maxima selection", 
+terra::plot(seg_selected_maxi \%\% 8, main = "Segments, maxima selection", 
 col = rainbow(8))
 }
 \seealso{

@@ -24,9 +24,7 @@ creates a raster mask by union of circular buffers around xy positions
 }
 \examples{
 # create raster
-r <- raster::raster()
-raster::extent(r) <- c(0, 40, 0, 40)
-raster::res(r) <- 1
+r <- terra::rast(xmin=0, xmax = 40, ymin = 0, ymax = 40, resolution = 1, crs= NA )
 
 # xy positions
 xy <- data.frame(
@@ -38,11 +36,11 @@ mask1 <- raster_xy_mask(xy, c(5, 8, 5, 5), r)
 mask2 <- raster_xy_mask(xy, c(5, 8, 5, 5), r, binary = FALSE)
 
 # display binary raster
-raster::plot(mask1)
+terra::plot(mask1)
 graphics::points(xy)
 
 # display distance raster
-raster::plot(mask2)
+terra::plot(mask2)
 graphics::points(xy)
 }
 \seealso{

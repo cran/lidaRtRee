@@ -35,6 +35,7 @@
 #' fulfill the height criterion are also integrated to it.
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # fill NA values in canopy height model
 #' chm_chablais3[is.na(chm_chablais3)] <- 0
@@ -55,24 +56,26 @@
 #' min_gap_surface = 0)
 #'
 #' # gap id and corresponding surface for third detection parameters
-#' table(raster::values(gaps2$gap_id)) * raster::res(gaps2$gap_id)[1]^2
+#' table(terra::values(gaps2$gap_id)) * terra::res(gaps2$gap_id)[1]^2
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot binary image of gaps
-#' raster::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
-#' raster::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
-#' raster::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
+#' terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+#' terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
+#' terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
 #'
 #' # plot filtered CHM
-#' raster::plot(gaps2$filled_chm, main = "Filtered CHM")
+#' terra::plot(gaps2$filled_chm, main = "Filtered CHM")
 #' @seealso \code{\link{dem_filtering}}, \code{\link{edge_detection}}
-#' @return A list of three raster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
+#' @return A list of three SpatRaster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
 #' @export
 gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 25, 
                           max_gap_surface = +Inf, closing_height_bin = 1, 
                           nl_filter = "Median", nl_size = 3, gap_reconstruct = FALSE) {
+  # convert to SpatRaster
+  if(!inherits(chm, "SpatRaster")) chm <- convert_raster(chm)
   # convert to cimg object
   c_chm <- raster2Cimg(chm)
   # apply non linear filter to chm
@@ -93,7 +96,7 @@ gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 
       # create binary image to close (areas where chm> i)
       dummy <- imager::as.cimg(c_chm > i)
       # create stucturing element (uneven disk of radius i/2)
-      strel <- imager::as.cimg(create_disk(floor(i / ratio / raster::xres(chm) / 2) * 2 + 1))
+      strel <- imager::as.cimg(create_disk(floor(i / ratio / terra::xres(chm) / 2) * 2 + 1))
       # perform morphological closing and store in list
       l_im[[as.character(i)]] <- imager::mclosing(dummy, strel)
     }
@@ -113,14 +116,14 @@ gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 
     not_closed_labels <- setdiff(unique(labels * gaps), 0)
     # remove closed labels
     gaps <- cimg2Raster(labels, chm)
-    raster::values(gaps)[!is.element(raster::values(gaps), not_closed_labels)] <- 0
+    terra::values(gaps)[!is.element(terra::values(gaps), not_closed_labels)] <- 0
     gaps <- raster2Cimg(gaps > 0)
   }
   #
   # label unconnected gaps
   labels <- (imager::label(gaps) + 1) * gaps
   # extract gap surface
-  gap_surface <- table(as.vector(labels)) * (raster::xres(chm))^2
+  gap_surface <- table(as.vector(labels)) * (terra::xres(chm))^2
   gap_surface <- as.data.frame(gap_surface)
   # remove non-gap category (0), except if only one gap
   if (nrow(gap_surface) > 1) {
@@ -133,7 +136,7 @@ gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 
   r_labels[r_labels == 0] <- NA
   # create map where pixel value is gap size
   r_surface <- r_labels
-  raster::values(r_surface) <- NA
+  terra::values(r_surface) <- NA
   # PROBABLY A BETTER WAY TO DO IT THAN IN A LOOP
   for (i in 1:nrow(gap_surface))
   {
@@ -154,12 +157,13 @@ gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 
 #' \code{\link{gap_detection}}). The gap image is compared to a gap image which 
 #' has undergone a dilation or erosion to identify edges of gaps.
 #'
-#' @param gaps raster object. gaps image where 1 represents gaps and 0 non-gaps 
+#' @param gaps SpatRaster object. gaps image where 1 represents gaps and 0 non-gaps 
 #' areas
 #' @param inside boolean. defines where the edge is extracted: either inside the 
 #' gaps (an erosion is applied to the gaps image) or outside (a dilation is applied)
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # fill NA values in canopy height model
 #' chm_chablais3[is.na(chm_chablais3)] <- 0
@@ -174,21 +178,21 @@ gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 
 #' edges_inside <- edge_detection(!is.na(gaps$gap_id))
 #' edges_outside <- edge_detection(!is.na(gaps$gap_id), inside = FALSE)
 #'
-#' # edge propotion
-#' sum(raster::values(edges_inside)) / (nrow(edges_inside) * ncol(edges_inside))
-#' sum(raster::values(edges_outside)) / (nrow(edges_outside) * ncol(edges_outside))
+#' # edge proportion
+#' sum(terra::values(edges_inside)) / (nrow(edges_inside) * ncol(edges_inside))
+#' sum(terra::values(edges_outside)) / (nrow(edges_outside) * ncol(edges_outside))
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot binary image of gaps
-#' raster::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+#' terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
 #'
 #' # plot edges
-#' raster::plot(edges_inside, main = "Edges (inside)", legend = FALSE)
-#' raster::plot(edges_outside, main = "Edges (outside)", legend = FALSE)
+#' terra::plot(edges_inside, main = "Edges (inside)", legend = FALSE)
+#' terra::plot(edges_outside, main = "Edges (outside)", legend = FALSE)
 #' @seealso \code{\link{gap_detection}}
-#' @return A raster object where edges are labelled as 1.
+#' @return A SpatRaster object where edges are labelled as 1.
 #' @export
 edge_detection <- function(gaps, inside = TRUE) {
   # convert to cimg object

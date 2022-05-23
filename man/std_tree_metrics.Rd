@@ -43,5 +43,5 @@ trees <- data.frame(h = h, s = h, sp = h * 0.95, v = h * h * 0.6, vp = h * h * 0
 std_tree_metrics(trees, area_ha = 0.1)
 }
 \seealso{
-\code{\link{tree_extraction}}
+\code{\link{tree_extraction}}, \code{\link{clouds_tree_metrics}}, \code{\link{raster_metrics}}
 }

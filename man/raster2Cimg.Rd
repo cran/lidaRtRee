@@ -2,34 +2,35 @@
 % Please edit documentation in R/tree_detection.R
 \name{raster2Cimg}
 \alias{raster2Cimg}
-\title{RasterLayer to Cimg conversion}
+\title{SpatRaster to Cimg conversion}
 \usage{
-raster2Cimg(rasterLayer, NA_replace = 0, maxpixels = 1e+10)
+raster2Cimg(r, NA_replace = 0, maxpixels = 1e+10)
 }
 \arguments{
-\item{rasterLayer}{raster object. raster of canopy height model, preferably 
+\item{r}{SpatRaster object. raster of canopy height model, preferably 
 filtered to avoid effect of holes on volume and surface computation}
 
 \item{NA_replace}{numeric. value to replace NA values with.}
 
 \item{maxpixels}{numeric. maximum number of pixels to be converted to cimg 
-(argument passed to as.cimg).}
+(argument passed to \code{\link{as.cimg}}).}
 }
 \value{
 A cimg object
 }
 \description{
-converts a RasterLayer object to Cimg object. NA values in raster are replaced.
+converts a SpatRaster object to cimg object. NA values in raster are replaced.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 chm_cim <- raster2Cimg(chm_chablais3)
 chm_cim
 summary(chm_cim)
 
-# plot rasterLayer
-raster::plot(chm_chablais3)
+# plot SpatRaster
+terra::plot(chm_chablais3)
 
 # plot cimg object
 plot(chm_cim)

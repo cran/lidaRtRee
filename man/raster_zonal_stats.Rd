@@ -7,12 +7,12 @@
 raster_zonal_stats(segms, dem_nl, fun = max)
 }
 \arguments{
-\item{segms}{cimg or rasterLayer object. image with segments id (e.g. from 
+\item{segms}{cimg or SpatRaster object. image with segments id (e.g. from 
 \code{\link{segmentation}})}
 
-\item{dem_nl}{cimg or rasterLayer object. image to compute statistic from}
+\item{dem_nl}{cimg or SpatRaster object. image to compute statistic from}
 
-\item{fun}{function to compute statistis from values in each segment}
+\item{fun}{function to compute statistics from values in each segment}
 }
 \value{
 A cimg object or raster object with values of the statistic
@@ -22,6 +22,7 @@ compute zonal statistic of an image
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # median filter
 chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -39,12 +40,12 @@ seg_maxi <- segmentation(maxi, chm_chablais3)
 max_in_segment <- raster_zonal_stats(seg_maxi, chm_chablais3)
 
 # plot original image
-raster::plot(chm_chablais3, main = "Median filter")
+terra::plot(chm_chablais3, main = "Median filter")
 
 # plot segments and image of max value inside segments
 seg_maxi[seg_maxi == 0] <- NA
-raster::plot(seg_maxi \%\% 8, main = "Segments", col = rainbow(8))
-raster::plot(max_in_segment, main = "Max value in segment")
+terra::plot(seg_maxi \%\% 8, main = "Segments", col = rainbow(8))
+terra::plot(max_in_segment, main = "Max value in segment")
 }
 \seealso{
 \code{\link{segmentation}}

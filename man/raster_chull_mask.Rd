@@ -12,27 +12,26 @@ raster_chull_mask(xy, r)
 \item{r}{raster object. target raster}
 }
 \value{
-a raster with 0 or 1
+a SpatRaster with 0 or 1
 }
 \description{
 creates raster mask corresponding to the convex hull of xy positions
 }
 \examples{
 # create raster
-r <- raster::raster()
-raster::extent(r) <- c(0, 40, 0, 40)
-raster::res(r) <- 1
+r <- terra::rast(extent = c(0, 40, 0, 40), resolution = 1, crs = "epsg:2154")
+
 
 # xy positions
 xy <- data.frame(
-  c(10, 20, 31.25, 15),
-  c(10, 20, 31.25, 25)
+  x = c(10, 20, 31.25, 15),
+  y = c(10, 20, 31.25, 25)
 )
 # compute mask
 mask1 <- raster_chull_mask(xy, r)
 
 # display binary raster
-raster::plot(mask1)
+terra::plot(mask1)
 graphics::points(xy)
 }
 \seealso{

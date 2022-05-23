@@ -74,20 +74,6 @@ tree_matching <- function(lr, ld, delta_ground = 2.1, h_prec = 0.14, stat = TRUE
   # replace values over the matching limit (pairs where the 3D distance is over the max matching radius of the reference tree) by the limit
   dn[dn >= 1] <- 1
   #
-  # trees that have no matching possibilities
-  # reference trees (sum of column == number of detected trees)
-  i.r <- which(apply(dn, 2, sum) == nrow(dn))
-  if (length(i.r) > 0) {
-    # remove from distance matrix
-    dn <- dn[, -i.r]
-  }
-  # detected trees (sum of row == number of reference trees)
-  i.d <- which(apply(dn, 1, sum) == ncol(dn))
-  if (length(i.d) > 0) {
-    # remove from distance matrix
-    dn <- dn[-i.d, ]
-  }
-  #
   # iterative matching of pairs with the lowest matching index
   matched <- data.frame()
   # add one row of "1" and one column to prevent dn from becoming a vector
@@ -102,18 +88,15 @@ tree_matching <- function(lr, ld, delta_ground = 2.1, h_prec = 0.14, stat = TRUE
     # remove pair from matrix
     dn <- dn[-coord[1], -coord[2]]
   }
-  if (length(matched) == 0) {
-    return(NULL)
-  } else {
-    names(matched) <- c("r", "d")
-    #
-    # computes stats if required
-    if (stat) {
-      matched$h_diff <- ld[matched[, 2], 3] - lr[matched[, 1], 3]
-      matched$plan_diff <- sqrt((ld[matched[, 2], 1] - lr[matched[, 1], 1])^2 + (ld[matched[, 2], 2] - lr[matched[, 1], 2])^2)
-    }
-    return(matched)
+  if (length(matched) == 0) return(NULL)
+  names(matched) <- c("r", "d")
+  #
+  # computes stats if required
+  if (stat) {
+    matched$h_diff <- ld[matched[, 2], 3] - lr[matched[, 1], 3]
+    matched$plan_diff <- sqrt((ld[matched[, 2], 1] - lr[matched[, 1], 1])^2 + (ld[matched[, 2], 2] - lr[matched[, 1], 2])^2)
   }
+  return(matched)
 }
 
 #-------------------------------------------------------------------------------
@@ -125,7 +108,7 @@ tree_matching <- function(lr, ld, delta_ground = 2.1, h_prec = 0.14, stat = TRUE
 #' positions
 #' @param matched data.frame. contains pair indices, typically returned by \code{\link{tree_matching}}
 #' @param chm raster object. raster for background display
-#' @param plot_border Spatialpolygon. plot boundaries for display
+#' @param plot_border sf or SpatVector object. plot boundaries for display
 #' @param ... Additional arguments to be used by \code{\link{plot}}
 #' @return no return
 #' @seealso \code{\link{tree_matching}}, \code{\link{hist_detection}}
@@ -144,6 +127,10 @@ tree_matching <- function(lr, ld, delta_ground = 2.1, h_prec = 0.14, stat = TRUE
 #' @export
 plot_matched <- function(lr, ld, matched, chm = NULL, plot_border = NULL, ...) {
   # colors
+  # convert to data.frame with same names to avoid further issues
+  lr <- as.data.frame(lr)
+  ld <- as.data.frame(ld)
+  names(lr)[1:3] <- names(ld)[1:3] <- c("x", "y", "z")
   couleur_lr <- rep("red", nrow(lr))
   couleur_ld <- rep("red", nrow(ld))
   couleur_lr[matched[, "r"]] <- "blue"
@@ -151,7 +138,8 @@ plot_matched <- function(lr, ld, matched, chm = NULL, plot_border = NULL, ...) {
   #
   # display raster background or not
   if (!is.null(chm)) {
-    raster::plot(chm, asp = 1, ...)
+    if(!inherits(chm, "SpatRaster")) chm <- convert_raster(chm)
+    terra::plot(chm, asp = 1, ...)
     # add points of detected and reference trees
     graphics::points(rbind(lr[, 1:2], ld[, 1:2]), 
                      pch = c(rep(1, nrow(lr)), rep(2, nrow(ld))), 
@@ -173,7 +161,8 @@ plot_matched <- function(lr, ld, matched, chm = NULL, plot_border = NULL, ...) {
   }
   # add plot boundary
   if (!is.null(plot_border)) {
-    sp::plot(plot_border, add = TRUE)
+    if(inherits(plot_border, "SpatVector")) plot_border <- sf::st_as_sf(plot_border)
+    plot(sf::st_geometry(plot_border), add = TRUE)
   }
   #
   # legend
@@ -220,7 +209,8 @@ hist_detection <- function(lr, ld, matched, plot = TRUE) {
       from = 0, 
       to = ceiling(max(lr[, 3], ld[, 3]) / 5) * 5, 
       by = 5), 
-      col = c("green", "red", "blue"))
+      col = c("green", "red", "blue"),
+      yaxt = "n")
     graphics::axis(2, mgp = c(0.5, 0.5, 0))
     graphics::mtext(side = 2, text = "Number of trees", line = 1.3)
     graphics::mtext(side = 1, text = "Height classes (m)", line = 1.3)
@@ -260,7 +250,7 @@ hist_stack <- function(x, breaks, col = NULL, breaksFun = paste, ...) {
     h <- graphics::hist(x[[i]], breaks = breaks, plot = FALSE)
     bars <- rbind(bars, h$counts)
   }
-  graphics::barplot(bars, names.arg = NULL, col = col, space = 0, yaxt = "n")
+  graphics::barplot(bars, names.arg = NULL, col = col, space = 0, ...)
   at <- seq(along = h$breaks) - 1
   modulo <- ceiling(length(at) / 10)
   sel <- (at %% modulo == 0)
@@ -347,7 +337,7 @@ height_regression <- function(lr, ld, matched, plot = TRUE, species = NULL, ...)
       graphics::legend("topleft", texte, col = color[texte, "col"], pch = 15, cex = 1, y.intersp = 1)
     }
   }
-  list(lm = reg, stats = list(rmse = sqrt(sum(app$Hm - app$Hl)^2 / nrow(app)), 
+  list(lm = reg, stats = list(rmse = sqrt(sum((app$Hm - app$Hl)^2) / nrow(app)), 
                               bias = mean(app$Hl - app$Hm), 
                               sd = stats::sd(app$Hl - app$Hm)))
 }

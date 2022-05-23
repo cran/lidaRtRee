@@ -50,11 +50,11 @@ treetop height}
 \item{dtm}{raster object or string indicating location of raster file with 
 the terrain model. If provided, the maxima extraction and watershed segmentation 
 are performed on the dem (this avoids the deformation of crown because of the 
-normalisation with terrain), but maxima selection and segment adjustement are 
+normalisation with terrain), but maxima selection and segment adjustment are 
 performed on 'dem-dtm' because the selection criteria is the height to terrain.}
 }
 \value{
-A RasterStack with 4 layers: selected local maxima (values = 
+A SpatRaster with 4 layers: selected local maxima (values = 
 distance to higher pixel), segments, non-linear preprocessed dem, smoothed 
 preprocessed dem
 }
@@ -64,6 +64,7 @@ segmentation and segmentation adjustment of a raster image.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # tree segmentation
 segments <- tree_segmentation(chm_chablais3)
@@ -74,17 +75,17 @@ segments2 <- tree_segmentation(chm_chablais3,
 )
 
 # plot initial image segments
-raster::plot(chm_chablais3, main = "Initial image")
-raster::plot(segments$smoothed_dem, main = "Filtered image")
-raster::plot(segments$local_maxima, main = "Local maxima")
+terra::plot(chm_chablais3, main = "Initial image")
+terra::plot(segments$smoothed_dem, main = "Filtered image")
+terra::plot(segments$local_maxima, main = "Local maxima")
 #
 # replace segment with id 0 (not a tree) with NA
 segments$segments_id[segments$segments_id == 0] <- NA
-raster::plot(segments$segments_id \%\% 8, main = "Segments", col = rainbow(8))
+terra::plot(segments$segments_id \%\% 8, main = "Segments", col = rainbow(8))
 #
 # plot segmentation with other parameters
 segments2$segments_id[segments2$segments_id == 0] <- NA
-raster::plot(segments2$segments_id \%\% 8, main = "Segments2", col = rainbow(8))
+terra::plot(segments2$segments_id \%\% 8, main = "Segments2", col = rainbow(8))
 }
 \references{
 Monnet, J.-M. 2011. Using airborne laser scanning for mountain 

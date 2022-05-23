@@ -45,5 +45,5 @@ lines(ellipses2[[1]], col = "red")
 lines(ellipses2[[2]], col = "red")
 }
 \seealso{
-\code{\link{pointList2SPDF}}
+\code{\link{pointList2poly}}
 }

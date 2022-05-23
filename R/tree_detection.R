@@ -41,7 +41,7 @@ create_disk <- function(width = 5) {
 #' }
 #'
 #' @param dem cimg object (e.g. obtained with \code{\link[imager]{as.cimg}}) or 
-#' Raster Layer object (e.g. obtained with \code{\link[raster]{raster}})
+#' SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})
 #' @param nl_filter string. type of non-linear filter to apply: "None", "Closing" 
 #' or "Median"
 #' @param nl_size numeric. kernel width in pixel for non-linear filtering
@@ -56,6 +56,7 @@ create_disk <- function(width = 5) {
 #' values before filtering to avoid border effects
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # filtering with median and Gaussian smoothing
 #' im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigmap = 0.8)
@@ -68,26 +69,26 @@ create_disk <- function(width = 5) {
 #' )
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot image after median filter
-#' raster::plot(im$non_linear_image, main = "Median filter")
+#' terra::plot(im$non_linear_image, main = "Median filter")
 #'
 #' # plot image after median and Gaussian filters
-#' raster::plot(im$smoothed_image, main = "Smoothed image")
+#' terra::plot(im$smoothed_image, main = "Smoothed image")
 #'
 #' # plot image after median and value-dependent Gaussian filters
-#' raster::plot(im2$smoothed_image, main = "Value-dependent smoothing")
+#' terra::plot(im2$smoothed_image, main = "Value-dependent smoothing")
 #' @seealso \code{\link{maxima_detection}}, filters of imager package: 
 #' \code{\link[imager]{mclosing}}, \code{\link[imager]{medianblur}}, 
 #' \code{\link[imager]{deriche}}
-#' @return A list of two cimg or a RasterStack objects: image after non-linear 
+#' @return A list of two cimg objects or a SpatRaster object with image after non-linear 
 #' filter and image after both filters
 #' @export
 dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3, 
                           padding = TRUE) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(dem)[1] == "RasterLayer") {
+  # convert raster to cimg object if necessary
+  if (inherits(dem, "SpatRaster")) {
     dem.c <- raster2Cimg(dem)
   } else {
     dem.c <- dem
@@ -159,9 +160,9 @@ dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3,
     dem_gs <- imager::as.cimg(dem_gs[(border.size + 1):(nrow(dem_gs) - border.size), 
                                      (border.size + 1):(ncol(dem_gs) - border.size)])
   }
-  # convert cimg objects to rasterLayer if necessary
-  if (class(dem)[1] == "RasterLayer") {
-    output <- raster::addLayer(cimg2Raster(dem_nl, dem), cimg2Raster(dem_gs, dem))
+  # convert cimg objects to SpatRaster if necessary
+  if (inherits(dem, "SpatRaster")) {
+    output <- c(cimg2Raster(dem_nl, dem), cimg2Raster(dem_gs, dem))
     names(output) <- c("non_linear_image", "smoothed_image")
   } else {
     output <- list(non_linear_image = dem_nl, smoothed_image = dem_gs)
@@ -178,34 +179,35 @@ dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3,
 #' due to neighbor pixels with identical value.
 #'
 #' @param dem cimg object (e.g. as created by \code{\link[imager]{cimg}}) or 
-#' RasterLayer object (e.g. obtained with \code{\link[raster]{raster}})
-#' @param dem.res numeric. image resolution, in case \code{dem} is a rasterLayer 
-#' object, \code{dem.res} is extracted from the object by \code{\link[raster]{res}}
+#' SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})
+#' @param dem.res numeric. image resolution, in case \code{dem} is a SpatRaster 
+#' object, \code{dem.res} is extracted from the object by \code{\link[terra]{res}}
 #' @param max.width numeric. maximum kernel width in pixel to check for local 
 #' maximum
 #' @param jitter boolean. indicates if noise should be added to image values to 
 #' avoid the adjacent maxima due to the adjacent pixels with equal values
-#' @return A cimg object or RasterLayer object which values are the radius (n) 
+#' @return A cimg object or SpatRaster object which values are the radius (n) 
 #' in meter of the square window (width 2n+1) where the center pixel is global 
 #' maximum
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # maxima detection
 #' maxi <- maxima_detection(chm_chablais3)
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot maxima image
-#' raster::plot(maxi, main = "Local maxima")
+#' terra::plot(maxi, main = "Local maxima")
 #' @seealso \code{\link{dem_filtering}}, \code{\link{maxima_selection}}
 #' @export
 maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(dem)[1] == "RasterLayer") {
+  # convert raster to cimg object if necessary
+  if (inherits(dem, "SpatRaster")) {
     dem_gs <- raster2Cimg(dem)
-    dem.res <- raster::res(dem)[1]
+    dem.res <- terra::res(dem)[1]
   } else {
     dem_gs <- dem
   }
@@ -236,8 +238,8 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
   }
   # convert window size from pixels to meters
   maxi[maxi > 0] <- (maxi[maxi > 0] + 1) * dem.res
-  # convert cimg objects to rasterLayer if necessary
-  if (class(dem)[1] == "RasterLayer") {
+  # convert cimg objects to raster if necessary
+  if (inherits(dem, "SpatRaster")) {
     maxi <- cimg2Raster(maxi, dem)
   }
   maxi
@@ -256,20 +258,21 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
 #' the initial image value.
 #' }
 #'
-#' @param maxi cimg object or RasterLayer object. image with local maxima 
+#' @param maxi cimg object or SpatRaster object. image with local maxima 
 #' (typically output from \code{\link{maxima_detection}}, image values correspond 
 #' to neighborhood radius on which pixels are global maxima in the initial image)
-#' @param dem_nl cimg object. initial image from which maxima were detected
+#' @param dem_nl cimg object or SpatRaster object. initial image from which maxima were detected
 #' @param hmin numeric. minimum value in initial image for a maximum to be selected
 #' @param dmin numeric. intercept term for selection of maxima depending on 
 #' neighborhood radius: \code{maxi >= dmin + dem_nl * dprop}
 #' @param dprop numeric. proportional term for selection of maxima depending on 
 #' neighborhood radius: \code{maxi >= dmin + dem_nl * dprop}
-#' @return A cimg object or rasterLayer object which values are the radius (n) 
+#' @return A cimg object or SpatRaster object which values are the radius (n) 
 #' in meter of the square window (width 2n+1) where the center pixel is global 
 #' maximum and which fulfill the selection criteria
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # maxima detection
 #' maxi <- maxima_detection(chm_chablais3)
@@ -280,53 +283,54 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
 #' selected_maxi <- maxima_selection(maxi, chm_chablais3, dm = 1, dprop = 0.1)
 #'
 #' # corresponding count number of remaining maxima
-#' table(raster::values(maxi))
-#' table(raster::values(selected_maxi_hmin))
-#' table(raster::values(selected_maxi_dm))
-#' table(raster::values(selected_maxi))
+#' table(terra::values(maxi))
+#' table(terra::values(selected_maxi_hmin))
+#' table(terra::values(selected_maxi_dm))
+#' table(terra::values(selected_maxi))
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot maxima images, original and first case
-#' raster::plot(maxi, main = "Local maxima")
-#' raster::plot(selected_maxi, main = "Selected maxima")
+#' terra::plot(maxi, main = "Local maxima")
+#' terra::plot(selected_maxi, main = "Selected maxima")
 #' @seealso \code{\link{maxima_detection}}
 #' @export
 maxima_selection <- function(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(maxi)[1] == "RasterLayer") {
+  # convert SpatRaster to cimg object if necessary
+  if (inherits(maxi, "SpatRaster")) {
     israster <- TRUE
-    dem <- maxi
-    maxi <- raster2Cimg(maxi)
+    maxi_c <- raster2Cimg(maxi)
     dem_nl <- raster2Cimg(dem_nl)
   } else {
     israster <- FALSE
+    maxi_c <- maxi
   }
   # height filter
-  maxi[dem_nl < hmin] <- 0
+  maxi_c[dem_nl < hmin] <- 0
   # distance filter
-  maxi[maxi < (dmin + dem_nl * dprop)] <- 0
-  # convert to rasterLayer if necessary
+  maxi_c[maxi_c < (dmin + dem_nl * dprop)] <- 0
+  # convert to raster if necessary
   if (israster) {
-    cimg2Raster(maxi, dem)
+    cimg2Raster(maxi_c, maxi)
   } else {
-    maxi
+    maxi_c
   }
 }
 
 #-------------------------------------------------------------------------------
 #' Image segmentation by seed-based watershed algorithm
 #'
-#' performs a seed-based watershed segmentation (wrapper for imager::watershed)
+#' performs a seed-based watershed segmentation (wrapper for \code{\link[imager]{watershed}})
 #'
-#' @param maxi cimg or rasterLayer object. image with seed points (e.g. from 
+#' @param maxi cimg or SpatRaster object. image with seed points (e.g. from 
 #' \code{\link{maxima_detection}} or \code{\link{maxima_selection}})
-#' @param dem_nl cimg or rasterLayer object. image for seed propagation 
+#' @param dem_nl cimg or SpatRaster object. image for seed propagation 
 #' (typically initial image used for maxima detection).
-#' @return A cimg object or rasterlayer object with segments id
+#' @return A cimg object or SpatRaster object with segments id
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -345,35 +349,34 @@ maxima_selection <- function(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0) {
 #' seg_selected_maxi <- segmentation(selected_maxi, chm_chablais3)
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Median filter")
+#' terra::plot(chm_chablais3, main = "Median filter")
 #'
 #' # plot segmented image
 #' # replace segment with id 0 (not a tree) with NA
 #' seg_maxi[seg_maxi == 0] <- NA
-#' raster::plot(seg_maxi %% 8, main = "Segments, no maxima selection", 
+#' terra::plot(seg_maxi %% 8, main = "Segments, no maxima selection", 
 #' col = rainbow(8))
 #' seg_selected_maxi [seg_selected_maxi == 0] <- NA
-#' raster::plot(seg_selected_maxi %% 8, main = "Segments, maxima selection", 
+#' terra::plot(seg_selected_maxi %% 8, main = "Segments, maxima selection", 
 #' col = rainbow(8))
 #' @seealso \code{\link{maxima_detection}}, \code{\link{maxima_selection}}, 
 #' \code{\link{seg_adjust}}
 #' @export
 segmentation <- function(maxi, dem_nl) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(maxi)[1] == "RasterLayer") {
+  # convert SpatRaster to cimg object if necessary
+  if (inherits(maxi, "SpatRaster")) {
     israster <- TRUE
-    dem <- maxi
-    maxi <- raster2Cimg(maxi)
+    maxi_c <- raster2Cimg(maxi)
     dem_nl <- raster2Cimg(dem_nl)
   } else {
     israster <- FALSE
   }
   # maxima locations
-  a <- which(maxi > 0)
+  a <- which(maxi_c > 0)
   # tree number
   na <- length(a)
   # create seed image
-  dummy <- maxi
+  dummy <- maxi_c
   # initialise seeds with id
   dummy[a] <- sample(1:na, na)
   # watershed segmentation
@@ -381,7 +384,7 @@ segmentation <- function(maxi, dem_nl) {
   #
   # convert to raster if necessary
   if (israster) {
-    cimg2Raster(dem_w, dem)
+    cimg2Raster(dem_w, maxi)
   } else {
     dem_w
   }
@@ -392,13 +395,14 @@ segmentation <- function(maxi, dem_nl) {
 #'
 #' compute zonal statistic of an image
 #'
-#' @param segms cimg or rasterLayer object. image with segments id (e.g. from 
+#' @param segms cimg or SpatRaster object. image with segments id (e.g. from 
 #' \code{\link{segmentation}})
-#' @param dem_nl cimg or rasterLayer object. image to compute statistic from
-#' @param fun function to compute statistis from values in each segment
+#' @param dem_nl cimg or SpatRaster object. image to compute statistic from
+#' @param fun function to compute statistics from values in each segment
 #' @return A cimg object or raster object with values of the statistic
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -416,33 +420,32 @@ segmentation <- function(maxi, dem_nl) {
 #' max_in_segment <- raster_zonal_stats(seg_maxi, chm_chablais3)
 #'
 #' # plot original image
-#' raster::plot(chm_chablais3, main = "Median filter")
+#' terra::plot(chm_chablais3, main = "Median filter")
 #'
 #' # plot segments and image of max value inside segments
 #' seg_maxi[seg_maxi == 0] <- NA
-#' raster::plot(seg_maxi %% 8, main = "Segments", col = rainbow(8))
-#' raster::plot(max_in_segment, main = "Max value in segment")
+#' terra::plot(seg_maxi %% 8, main = "Segments", col = rainbow(8))
+#' terra::plot(max_in_segment, main = "Max value in segment")
 #' @seealso \code{\link{segmentation}}
 #' @export
 raster_zonal_stats <- function(segms, dem_nl, fun = max) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(segms)[1] == "RasterLayer") {
+  # convert SpatRaster to cimg object if necessary
+  if (inherits(segms, "SpatRaster")) {
     israster <- TRUE
-    dem <- segms
-    segms <- raster2Cimg(segms)
+    segms_c <- raster2Cimg(segms)
     dem_nl <- raster2Cimg(dem_nl)
   } else {
     israster <- FALSE
   }
-  dummy <- stats::aggregate(as.numeric(dem_nl), by = list(as.numeric(segms)), 
+  dummy <- stats::aggregate(as.numeric(dem_nl), by = list(as.numeric(segms_c)), 
                             FUN = fun)
-  dem_wh <- dummy$x[match(as.numeric(segms), dummy$Group.1)]
+  dem_wh <- dummy$x[match(as.numeric(segms_c), dummy$Group.1)]
   #
-  dem_wh <- imager::as.cimg(matrix(dem_wh, nrow(segms)))
+  dem_wh <- imager::as.cimg(matrix(dem_wh, nrow(segms_c)))
   #
   # convert to raster if necessary
   if (israster) {
-    cimg2Raster(dem_wh, dem)
+    cimg2Raster(dem_wh, segms)
   } else {
     dem_wh
   }
@@ -455,19 +458,20 @@ raster_zonal_stats <- function(segms, dem_nl, fun = max) {
 #' reference image is below a certain percentage of the highest value inside the 
 #' segment. Removed pixels are attributed 0 value.
 #'
-#' @param dem_w cimg or rasterLayer object. image with segments id, without 0 
+#' @param dem_w cimg or SpatRaster object. image with segments id, without 0 
 #' values
-#' @param dem_wh cimg or rasterLayer object. image with max value inside segment
-#' @param dem_nl cimg or rasterLayer object. image with initial values
+#' @param dem_wh cimg or SpatRaster object. image with max value inside segment
+#' @param dem_nl cimg or SpatRaster object. image with initial values
 #' @param prop numeric. proportional threshold for removal of pixels which initial 
 #' values are lower than the max height of the segment (\code{dem_nl < prop x dem_wh})
 #' @param min.value numeric. threshold for removel of pixels which initial values 
 #' are lower (\code{dem_nl < min.value})
 #' @param min.maxvalue numeric. threshold for complete removal of segments which 
 #' maximum value height is smaller to the threshold (\code{dem_wh < min.maxvalue})
-#' @return A cimg or rasterLayer object: image with modified segments.
+#' @return A cimg or SpatRaster object: image with modified segments.
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
@@ -496,34 +500,33 @@ raster_zonal_stats <- function(segms, dem_nl, fun = max) {
 #' )
 #'
 #' # plot initial segmented image
-#' seg_selected_maxi [seg_selected_maxi == 0] <- NA
-#' raster::plot(seg_selected_maxi %% 8, main = "Initial segments", col = rainbow(8))
-#' seg_modif1[seg_modif1 == 0] <- NA
-#' raster::plot(seg_modif1 %% 8, main = "Modified segments 1", col = rainbow(8))
+#' # seg_selected_maxi[seg_selected_maxi == 0] <- NA
+#' terra::plot(seg_selected_maxi %% 8, main = "Initial segments", col = rainbow(8))
+#' # seg_modif1[seg_modif1 == 0] <- NA
+#' terra::plot(seg_modif1 %% 8, main = "Modified segments 1", col = rainbow(8))
 #' seg_modif2[seg_modif2 == 0] <- NA
-#' raster::plot(seg_modif2 %% 8, main = "Modified segments 2", col = rainbow(8))
+#' terra::plot(seg_modif2 %% 8, main = "Modified segments 2", col = rainbow(8))
 #' @seealso \code{\link{maxima_detection}}, \code{\link{maxima_selection}}
 #' @export
 seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.maxvalue = 5) {
-  # convert rasterLayer to cimg object if necessary
-  if (class(dem_w)[1] == "RasterLayer") {
+  # convert SpatRaster to cimg object if necessary
+  if (inherits(dem_w, "SpatRaster")) {
     israster <- TRUE
-    dem <- dem_w
-    dem_w <- raster2Cimg(dem_w)
+    dem_wc <- raster2Cimg(dem_w)
     dem_wh <- raster2Cimg(dem_wh)
     dem_nl <- raster2Cimg(dem_nl)
   } else {
     israster <- FALSE
   }
   # removal of segments with maximum value lower than min.maxvalue
-  dem_w[dem_wh < min.maxvalue] <- 0
+  dem_wc[dem_wh < min.maxvalue] <- 0
   # removal of pixels with values lower than prop * max value in segment
-  dem_w[dem_nl < prop * dem_wh] <- 0
+  dem_wc[dem_nl < prop * dem_wh] <- 0
   # removal of pixels with values lower than min.value
-  dem_w[dem_nl < min.value] <- 0
+  dem_wc[dem_nl < min.value] <- 0
   # convert to raster if necessary
   if (israster) {
-    dem_w <- cimg2Raster(dem_w, dem)
+    dem_w <- cimg2Raster(dem_wc, dem_w)
   }
   dem_w
 }
@@ -557,7 +560,7 @@ seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.max
 #' @param dtm raster object or string indicating location of raster file with 
 #' the terrain model. If provided, the maxima extraction and watershed segmentation 
 #' are performed on the dem (this avoids the deformation of crown because of the 
-#' normalisation with terrain), but maxima selection and segment adjustement are 
+#' normalisation with terrain), but maxima selection and segment adjustment are 
 #' performed on 'dem-dtm' because the selection criteria is the height to terrain.
 #' @references Monnet, J.-M. 2011. Using airborne laser scanning for mountain 
 #' forests mapping: Support vector regression for stand parameters estimation 
@@ -572,6 +575,7 @@ seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.max
 #' \url{https://hal.archives-ouvertes.fr/hal-00523245/document}
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # tree segmentation
 #' segments <- tree_segmentation(chm_chablais3)
@@ -582,21 +586,21 @@ seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.max
 #' )
 #'
 #' # plot initial image segments
-#' raster::plot(chm_chablais3, main = "Initial image")
-#' raster::plot(segments$smoothed_dem, main = "Filtered image")
-#' raster::plot(segments$local_maxima, main = "Local maxima")
+#' terra::plot(chm_chablais3, main = "Initial image")
+#' terra::plot(segments$smoothed_dem, main = "Filtered image")
+#' terra::plot(segments$local_maxima, main = "Local maxima")
 #' #
 #' # replace segment with id 0 (not a tree) with NA
 #' segments$segments_id[segments$segments_id == 0] <- NA
-#' raster::plot(segments$segments_id %% 8, main = "Segments", col = rainbow(8))
+#' terra::plot(segments$segments_id %% 8, main = "Segments", col = rainbow(8))
 #' #
 #' # plot segmentation with other parameters
 #' segments2$segments_id[segments2$segments_id == 0] <- NA
-#' raster::plot(segments2$segments_id %% 8, main = "Segments2", col = rainbow(8))
+#' terra::plot(segments2$segments_id %% 8, main = "Segments2", col = rainbow(8))
 #' @seealso \code{\link{dem_filtering}}, \code{\link{maxima_detection}}, 
 #' \code{\link{maxima_detection}}, \code{\link{maxima_selection}}, 
 #' \code{\link{segmentation}}, \code{\link{seg_adjust}}, \code{\link{tree_extraction}}
-#' @return A RasterStack with 4 layers: selected local maxima (values = 
+#' @return A SpatRaster with 4 layers: selected local maxima (values = 
 #' distance to higher pixel), segments, non-linear preprocessed dem, smoothed 
 #' preprocessed dem
 #' @export
@@ -607,14 +611,10 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
   if (crown_hmin > hmin) {
     stop("minimum tree height lower than minimum crown height")
   }
-  if (is.character(dem)) {
-    dem <- raster::raster(dem)
-  }
-  # convert NAs to 0s
+  dem <- convert_raster(dem, "terra")
+  # convert NAs to terrain altitude
   if (!is.null(dtm)) {
-    if (is.character(dtm)) {
-      dtm <- raster::raster(dtm)
-    }
+    dtm <- convert_raster(dtm, "terra")
     dem[is.na(dem)] <- dtm[is.na(dem)]
   } else {
     dtm <- 0
@@ -623,9 +623,9 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
   #
   # conversion of Gaussian filter standard deviation from meters to pixels
   if (length(sigma == 1)) {
-    sigma <- sigma / raster::res(dem)[1]
+    sigma <- sigma / terra::res(dem)[1]
   } else {
-    sigma[, 2] <- sigma[, 2] / raster::res(dem)[1]
+    sigma[, 2] <- sigma[, 2] / terra::res(dem)[1]
   }
   # dem filtering
   temp <- dem_filtering(dem, nl_filter = nl_filter, nl_size = nl_size, sigmap = sigma)
@@ -633,7 +633,7 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
   dem_gs <- temp$smoothed_image
   #
   # maxima detection
-  maxi <- maxima_detection(dem_gs, raster::res(dem)[1])
+  maxi <- maxima_detection(dem_gs, terra::res(dem)[1])
   #
   # maxima selection
   maxi <- maxima_selection(maxi, dem_nl - dtm, 0, dmin, dprop) # no selection based on top height at this stage, otherwise some artefacts occur in the watershed step
@@ -647,7 +647,7 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
   # remove trees from r_maxi
   maxi[dem_w == 0] <- 0
   #
-  output <- raster::addLayer(maxi, dem_w, dem_nl, dem_gs)
+  output <- c(maxi, dem_w, dem_nl, dem_gs)
   names(output) <- c("local_maxima", "segments_id", "filled_dem", "smoothed_dem")
   output
 }
@@ -657,13 +657,14 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
 #'
 #' creates a dataframe with segment id, height and coordinates of maxima, surface and volume, computed from three images: initial, local maxima and segmented, obtained with \code{\link{tree_segmentation}}
 #'
-#' @param r_dem_nl raster object. raster of canopy height model, preferably filtered to avoid effect of holes on volume and surface computation
-#' @param r_maxi raster object. raster positive values at local maxima
-#' @param r_dem_w raster object. segmented raster
-#' @param r_mask raster object. only segments which maxima are inside the mask are extracted
-#' @return A spatial data.frame with tree id, local maximum stats (height, dominance radius), segment stats (surface and volume).
+#' @param r_dem_nl SpatRaster object. raster of canopy height model, preferably filtered to avoid effect of holes on volume and surface computation
+#' @param r_maxi SpatRaster object. raster with positive values at local maxima
+#' @param r_dem_w SpatRaster object. segmented raster
+#' @param r_mask SpatRaster object. only segments which maxima are inside the mask are extracted. Values should be NA outside the mask, 1 inside.
+#' @return A sf collection of POINTs with 7 fields: tree id, local maximum stats (height, dominance radius), segment stats (surface and volume), coordinates (x and y).
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # tree segmentation
 #' segments <- tree_segmentation(chm_chablais3)
@@ -676,78 +677,80 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
 #' trees
 #'
 #' # plot initial image
-#' raster::plot(chm_chablais3)
+#' terra::plot(chm_chablais3)
 #'
 #' # add treetop positions
-#' sp::plot(trees, cex = trees$h / 20, add = TRUE, pch = 1)
+#' plot(trees["h"], add = TRUE, cex = trees$h/20, col = "black")
 #' \donttest{
 #' # add segment contours (vectorization is slow)
-#' contours <- raster::rasterToPolygons(segments$segments_id, dissolve = TRUE)
-#' sp::plot(contours, add = TRUE, border = "white")
+#' contours <- terra::as.polygons(segments$segments_id)
+#' terra::plot(contours, add = TRUE, border = "white")
 #' }
 #'
 #' @seealso \code{\link{tree_segmentation}}
 #' @export
 tree_extraction <- function(r_dem_nl, r_maxi, r_dem_w, r_mask = NULL) {
-  # apply mask to remove maxima outside of region of interest
-  if (!is.null(r_mask)) {
-    r_maxi <- r_maxi * r_mask
-  }
   # segments surface
-  s <- data.frame(t(table(raster::values(r_dem_w))))[, -1]
+  s <- data.frame(t(table(terra::values(r_dem_w))))[, -1]
   names(s) <- c("id", "s")
-  s$s <- s$s * raster::res(r_dem_nl)[1] * raster::res(r_dem_nl)[2]
+  s$s <- s$s * terra::xres(r_dem_nl) * terra::yres(r_dem_nl)
   # segments volume
-  v <- stats::aggregate(raster::values(r_dem_nl), by = list(raster::values(r_dem_w)), FUN = sum)
+  v <- stats::aggregate(terra::values(r_dem_nl), by = list(terra::values(r_dem_w)), FUN = sum)
   names(v) <- c("id", "v")
-  v$v <- v$v * raster::res(r_dem_nl)[1] * raster::res(r_dem_nl)[2]
+  v$v <- v$v * terra::xres(r_dem_nl) * terra::yres(r_dem_nl)
   #
-  # compute surface and volume inside mask, if mask is not null
+  # if mask is not null
   if (!is.null(r_mask)) {
+    # apply mask to remove maxima outside of region of interest
+    r_maxi <- r_maxi * r_mask
+    # compute surface and volume inside mask
     # segments surface in mask
-    sp <- data.frame(t(table(raster::values(r_dem_w * r_mask))))[, -1]
+    sp <- data.frame(t(table(terra::values(r_dem_w * r_mask))))[, -1]
     names(sp) <- c("id", "sp")
-    sp$sp <- sp$sp * raster::res(r_dem_nl)[1] * raster::res(r_dem_nl)[2]
+    sp$sp <- sp$sp * terra::xres(r_dem_nl) * terra::yres(r_dem_nl)
     # segments volume in mask
-    vp <- stats::aggregate(raster::values(r_dem_nl * r_mask), by = list(raster::values(r_dem_w)), FUN = sum)
+    vp <- stats::aggregate(terra::values(r_dem_nl * r_mask), by = list(terra::values(r_dem_w)), FUN = sum)
     names(vp) <- c("id", "vp")
-    vp$vp <- vp$vp * raster::res(r_dem_nl)[1] * raster::res(r_dem_nl)[2]
+    vp$vp <- vp$vp * terra::xres(r_dem_nl) * terra::yres(r_dem_nl)
   }
   #
   # extract segment id, height and dom_radius
-  cells <- which(raster::values(r_maxi) > 0)
+  cells <- which(terra::values(r_maxi) > 0)
   # check if positive values are present
   if (length(cells) == 0) {
     segms <- NULL
   } else {
-    coord <- raster::xyFromCell(r_maxi, cells)
-    segms <- data.frame(coord, id = raster::values(r_dem_w)[cells], 
-                        h = raster::values(r_dem_nl)[cells], 
-                        dom_radius = raster::values(r_maxi)[cells])
+    coord <- terra::xyFromCell(r_maxi, cells)
+    segms <- data.frame(coord, id = terra::values(r_dem_w)[cells], 
+                        h = terra::values(r_dem_nl)[cells], 
+                        dom_radius = terra::values(r_maxi)[cells])
     segms <- merge(segms, s, all.x = TRUE)
     segms <- merge(segms, v, all.x = TRUE)
     if (!is.null(r_mask)) {
       segms <- merge(segms, sp, all.x = TRUE)
       segms <- merge(segms, vp, all.x = TRUE)
     }
-    sp::coordinates(segms) <- ~ x + y
-    segms@proj4string <- r_dem_nl@crs
+    segms$X <- segms$x
+    segms$Y <- segms$y
+    segms <- sf::st_as_sf(segms, coords = c("X", "Y"))
+    sf::st_crs(segms) <- terra::crs(r_dem_nl)
   }
   segms
 }
 
 #-------------------------------------------------------------------------------
-#' Cimg to RasterLayer conversion
+#' Cimg to SpatRaster conversion
 #'
-#' converts a cimg object to a RasterLayer object
+#' converts a cimg object to a SpatRaster object
 #'
 #' @param cimg raster object. raster of canopy height model, preferably filtered to avoid effect of holes on volume and surface computation
-#' @param rasterLayer raster object. defines the extent and projection of conversion result
-#' @return A RasterLayer
+#' @param r SpatRaster object. defines the extent and projection of conversion result
+#' @return A SpatRaster object
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
-#' # convert rasterLayer to cimg object
+#' # convert raster to cimg object
 #' chm_cim <- raster2Cimg(chm_chablais3)
 #'
 #' # apply filtering
@@ -757,11 +760,11 @@ tree_extraction <- function(r_dem_nl, r_maxi, r_dem_w, r_mask = NULL) {
 #'   sigmap = 0
 #' )$non_linear_image
 #'
-#' # convert to RasterLayer
+#' # convert to SpatRaster
 #' chm_filt <- cimg2Raster(chm_cim_filt, chm_chablais3)
 #'
-#' # plot rasterLayer
-#' raster::plot(chm_chablais3)
+#' # plot SpatRaster
+#' terra::plot(chm_chablais3)
 #'
 #' # plot cimg object
 #' plot(chm_cim)
@@ -769,54 +772,55 @@ tree_extraction <- function(r_dem_nl, r_maxi, r_dem_w, r_mask = NULL) {
 #' # plot filtered cimg object
 #' plot(chm_cim_filt)
 #'
-#' # plot filtered rasterLayer
-#' raster::plot(chm_filt)
+#' # plot filtered SpatRaster
+#' terra::plot(chm_filt)
 #' @seealso \code{\link{raster2Cimg}}
 #' @export
-cimg2Raster <- function(cimg, rasterLayer = NULL) {
-  # convert to rasterLayer
-  dem <- raster::raster(t(as.matrix(cimg)))
+cimg2Raster <- function(cimg, r = NULL) {
+  # convert to SpatRaster
+  dem <- terra::rast(t(as.matrix(cimg)))
   # if reference is provided
-  if (!is.null(rasterLayer)) {
+  if (!is.null(r)) {
     # specifiy extent
-    raster::extent(dem) <- raster::extent(rasterLayer)
+    terra::ext(dem) <- terra::ext(r)
     # specify crs
-    raster::crs(dem) <- raster::crs(rasterLayer)
+    terra::crs(dem) <- terra::crs(r)
   }
   dem
 }
 
 #-------------------------------------------------------------------------------
-#' RasterLayer to Cimg conversion
+#' SpatRaster to Cimg conversion
 #'
-#' converts a RasterLayer object to Cimg object. NA values in raster are replaced.
+#' converts a SpatRaster object to cimg object. NA values in raster are replaced.
 #'
-#' @param rasterLayer raster object. raster of canopy height model, preferably 
+#' @param r SpatRaster object. raster of canopy height model, preferably 
 #' filtered to avoid effect of holes on volume and surface computation
 #' @param NA_replace numeric. value to replace NA values with.
 #' @param maxpixels numeric. maximum number of pixels to be converted to cimg 
-#' (argument passed to as.cimg).
+#' (argument passed to \code{\link{as.cimg}}).
 #' @return A cimg object
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' chm_cim <- raster2Cimg(chm_chablais3)
 #' chm_cim
 #' summary(chm_cim)
 #'
-#' # plot rasterLayer
-#' raster::plot(chm_chablais3)
+#' # plot SpatRaster
+#' terra::plot(chm_chablais3)
 #'
 #' # plot cimg object
 #' plot(chm_cim)
 #' @seealso \code{\link{cimg2Raster}}
 #' @export
-raster2Cimg <- function(rasterLayer, NA_replace = 0, maxpixels = 1e+10) {
+raster2Cimg <- function(r, NA_replace = 0, maxpixels = 1e+10) {
   # replace NA values
-  rasterLayer[is.na(rasterLayer)] <- NA_replace
+  r[is.na(r)] <- NA_replace
   # convert to cimg object
-  if (rasterLayer@ncols * rasterLayer@nrows > maxpixels) {
-    warning("Too many rasterLayer pixels: conversion to cimg partial; try with higher maxpixels arguments")
+  if (ncol(r) * nrow(r) > maxpixels) {
+    warning("Too many raster pixels: conversion to cimg partial; try with higher maxpixels arguments")
   }
-  imager::as.cimg(rasterLayer, maxpixels = maxpixels)
+  imager::as.cimg(matrix(r, ncol = nrow(r)), maxpixels = maxpixels)
 }

@@ -16,7 +16,7 @@ Airborne laser scanning data over the Chablais 3 plot, acquired in 2009 by Sinte
 \details{
 Additional information about the data
 \itemize{
-\item{Sensor: RIEGL LMS-Q560)}
+\item{Sensor: RIEGL LMS-Q560}
 \item{EPSG code of coordinates system: 2154}
 }
 }
@@ -29,5 +29,8 @@ las_chablais3
 }
 \references{
 Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22. \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+}
+\seealso{
+\code{\link{chm_chablais3}}, \code{\link{tree_inventory_chablais3}}
 }
 \keyword{datasets}

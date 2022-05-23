@@ -16,8 +16,8 @@ A \code{data.frame} with 76 columns:
 \item \code{D_mean_cm} mean tree diameter at breast height (1.3 m) in cm
 \item \code{stratum} forest ownership (public or private)
 \item \code{[, 9:60]} point cloud metrics computed from ALS, see \code{\link{aba_metrics}}
-\item \code{[, 6:73]} metrics derived from tree segmentation in ALS data, see \code{\link{std_tree_metrics}}
-\item \code{[, 73:76]} terrain statistics, see \code{\link{terrain_points_metrics}}
+\item \code{[, 61:73]} metrics derived from tree segmentation in ALS data, see \code{\link{std_tree_metrics}}
+\item \code{[, 74:76]} terrain statistics, see \code{\link{terrain_points_metrics}}
 }
 }
 \usage{

@@ -64,7 +64,7 @@ user_func <- function(x) {
   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))
 }
 clouds_tree_metrics(llas,
-  cbind(c(974350, 974390, 974350), c(6581680, 6581680, 6581640)),
+  cbind(c(974350, 974390), c(6581680, 6581680)),
   8,
   res = 0.5, func = user_func
 )

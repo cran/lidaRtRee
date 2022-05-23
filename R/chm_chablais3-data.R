@@ -8,7 +8,7 @@
 #'
 #' @usage data(chm_chablais3)
 #'
-#' @format A raster object
+#' @format A PackedSpatRaster object
 #'
 #' @keywords datasets
 #'
@@ -16,7 +16,7 @@
 #'
 #' @examples
 #' data(chm_chablais3)
-#' chm_chablais3
-#' raster::plot(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
+#' terra::plot(chm_chablais3)
 NULL
 "chm_chablais3"

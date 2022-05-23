@@ -7,11 +7,11 @@
 maxima_selection(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0)
 }
 \arguments{
-\item{maxi}{cimg object or RasterLayer object. image with local maxima 
+\item{maxi}{cimg object or SpatRaster object. image with local maxima 
 (typically output from \code{\link{maxima_detection}}, image values correspond 
 to neighborhood radius on which pixels are global maxima in the initial image)}
 
-\item{dem_nl}{cimg object. initial image from which maxima were detected}
+\item{dem_nl}{cimg object or SpatRaster object. initial image from which maxima were detected}
 
 \item{hmin}{numeric. minimum value in initial image for a maximum to be selected}
 
@@ -22,7 +22,7 @@ neighborhood radius: \code{maxi >= dmin + dem_nl * dprop}}
 neighborhood radius: \code{maxi >= dmin + dem_nl * dprop}}
 }
 \value{
-A cimg object or rasterLayer object which values are the radius (n) 
+A cimg object or SpatRaster object which values are the radius (n) 
 in meter of the square window (width 2n+1) where the center pixel is global 
 maximum and which fulfill the selection criteria
 }
@@ -39,6 +39,7 @@ the initial image value.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # maxima detection
 maxi <- maxima_detection(chm_chablais3)
@@ -49,17 +50,17 @@ selected_maxi_dm <- maxima_selection(maxi, chm_chablais3, dm = 2.5)
 selected_maxi <- maxima_selection(maxi, chm_chablais3, dm = 1, dprop = 0.1)
 
 # corresponding count number of remaining maxima
-table(raster::values(maxi))
-table(raster::values(selected_maxi_hmin))
-table(raster::values(selected_maxi_dm))
-table(raster::values(selected_maxi))
+table(terra::values(maxi))
+table(terra::values(selected_maxi_hmin))
+table(terra::values(selected_maxi_dm))
+table(terra::values(selected_maxi))
 
 # plot original image
-raster::plot(chm_chablais3, main = "Initial image")
+terra::plot(chm_chablais3, main = "Initial image")
 
 # plot maxima images, original and first case
-raster::plot(maxi, main = "Local maxima")
-raster::plot(selected_maxi, main = "Selected maxima")
+terra::plot(maxi, main = "Local maxima")
+terra::plot(selected_maxi, main = "Selected maxima")
 }
 \seealso{
 \code{\link{maxima_detection}}

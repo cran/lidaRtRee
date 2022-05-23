@@ -6,22 +6,23 @@
 #' Computes metrics by aggregating a raster at lower resolution or summarizing
 #' attributes based on XY locations
 #'
-#' Compute statistics by aggregating a raster at lower resolution. Aggregation
+#' Computes statistics by aggregating a raster at lower resolution. Aggregation
 #' groups are larger cells, new values are computed by applying a user-specified
 #' function to original cells contained in the larger cells. Results are provided
-#' as a data.frame which also contains the XY coordinates of the larger cells.
+#' as a data.frame with the XY coordinates of the larger cells, or as SpatRaster.
 #'
-#' @param r raster object or data.frame with xy coordinates in two first columns
+#' @param r SpatRaster object, data.frame with xy coordinates in two first columns, or POINT \code{\link[sf]{sf}} spatial object
 #' @param res numeric. Resolution of the aggregation raster, should be a multiple
 #' of r resolution if a raster is provided
 #' @param fun function. Function to compute metrics in each aggregated cell from
 #' the values contained in the initial raster (use x$layer to access raster
 #' values) / data.frame (use x$colum_name to access values)
-#' @param output string. indicates the class of output object "raster" or "data.frame"
+#' @param output string. indicates the class of output object "raster" for a SpatRaster or "data.frame"
 #' @return a data.frame with the XY center coordinates of the aggregated cells,
-#' and the values computed with the user-specified function or a Raster object
+#' and the values computed with the user-specified function, or a SpatRaster object
 #' @examples
 #' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # raster metrics from raster
 #' metrics1 <- raster_metrics(chm_chablais3, res = 10)
@@ -44,35 +45,39 @@
 #' summary(metrics2)
 #'
 #' # display raster metrics
-#' raster::plot(metrics1)
+#' terra::plot(metrics1)
 #' # display data.frame metrics
-#' raster::plot(raster::rasterFromXYZ(metrics2))
+#' terra::plot(terra::rast(metrics2, type = "xyz"))
 #' @export
 raster_metrics <-
   function(r,
            res = 20,
            fun = function(x) {
-             data.frame(mean = mean(x$layer), sd = stats::sd(x$layer))
+             data.frame(mean = mean(x[, 3]), sd = stats::sd(x[, 3]))
            },
            output = "raster") {
-    if (is.element(class(r), c("RasterLayer", "RasterBrick", "RasterStack"))) {
+    if (inherits(r, "SpatRaster")) {
       # convert to data.frame
-      st <- as.data.frame(raster::rasterToPoints(r))
-      projinfo <- raster::crs(r)
+      st <- terra::as.points(r)
+      st <- cbind(terra::geom(st)[, c("x", "y")], as.data.frame(terra::as.points(r)))
+      # backup crs
+      projinfo <- terra::crs(r)
     } else {
-      if (class(r) == "SpatialPointsDataFrame") {
-        st <- cbind(r@coords, r@data)
-        projinfo <- sp::proj4string(r)
+      if (inherits(r, "sf")) {
+        # convert to data.frame
+        st <- cbind(data.frame(sf::st_coordinates(r)), sf::st_drop_geometry(r))
+        # backup crs
+        projinfo <- sf::st_crs(r)$wkt
       } else {
         st <- r
         projinfo <- NA
       }
     }
     # compute coordinates of new cell center at metrics resolution
-    st$X <- round((st[, 1] - res / 2) / res) * res + res / 2
-    st$Y <- round((st[, 2] - res / 2) / res) * res + res / 2
+    dummy <- data.frame(X = round((st[, 1] - res / 2) / res) * res + res / 2, 
+                        Y = round((st[, 2] - res / 2) / res) * res + res / 2)
     # compute metrics by grouping factor
-    dummy <- lapply(split(st, list(st$X, st$Y), sep = "_"), FUN = fun)
+    dummy <- lapply(split(st, list(dummy$X, dummy$Y), sep = "_"), FUN = fun)
     # convert to data.frame
     dummy <- as.data.frame(do.call(rbind, dummy))
     #
@@ -81,15 +86,16 @@ raster_metrics <-
     # add id column or coordinates
     if (output == "raster") {
       if (nrow(dummy) > 1) {
-        raster::rasterFromXYZ(dummy, res = c(res, res), crs = projinfo)
+        terra::rast(dummy, type = "xyz", crs = projinfo)
       } else { # an error is returned by rasterFromXYZ when only one cell
+        # ??? still necessary for rast ?
         # duplicate row
         dummy2 <- rbind(dummy, dummy)
         dummy2[2, c("X", "Y")] <- dummy2[1, c("X", "Y")] + res
         # convert to raster
-        dummy2 <- raster::rasterFromXYZ(dummy2, res = c(res, res), crs = projinfo)
+        dummy2 <- terra::rast(dummy2, type = "xyz", crs = projinfo)
         # crop to original extent
-        raster::crop(dummy2, raster::extent(dummy$X-res/2, dummy$X+res/2, dummy$Y-res/2, dummy$Y+res/2))
+        terra::crop(dummy2, terra::ext(dummy$X-res/2, dummy$X+res/2, dummy$Y-res/2, dummy$Y+res/2))
       }
     } else {
       dummy

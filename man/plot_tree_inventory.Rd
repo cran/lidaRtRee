@@ -38,7 +38,8 @@ plot_tree_inventory(tree_inventory_chablais3[, c("x", "y")],
 
 # display tree inventory with CHM background
 data("chm_chablais3")
-raster::plot(chm_chablais3, col = gray(seq(0, 1, 1 / 255)))
+chm_chablais3 <- terra::rast(chm_chablais3)
+terra::plot(chm_chablais3, col = gray(seq(0, 1, 1 / 255)))
 plot_tree_inventory(tree_inventory_chablais3[, c("x", "y")],
   height = tree_inventory_chablais3$h,
   species = tree_inventory_chablais3$s,

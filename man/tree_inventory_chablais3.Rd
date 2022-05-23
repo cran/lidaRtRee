@@ -26,6 +26,12 @@ All trees with diameter at breast height >= 7.5 cm are inventoried on a 50m x 50
 \examples{
 data(tree_inventory_chablais3)
 summary(tree_inventory_chablais3)
+# display tree inventory
+plot_tree_inventory(tree_inventory_chablais3[, c("x", "y")],
+  diam = tree_inventory_chablais3$d, col = "red",
+  pch = tree_inventory_chablais3$e,
+  xlab = "X", ylab = "Y"
+)
 }
 \references{
 Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22 & 34 \url{https://tel.archives-ouvertes.fr/tel-00652698/document}

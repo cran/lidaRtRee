@@ -4,15 +4,7 @@
 \alias{coregistration}
 \title{Tree inventory and canopy height model coregistration}
 \usage{
-coregistration(
-  chm,
-  trees,
-  mask = NULL,
-  buffer = 19,
-  step = 0.5,
-  dm = 2,
-  plot = TRUE
-)
+coregistration(chm, trees, mask, buffer = 19, step = 0.5, dm = 2, plot = TRUE)
 }
 \arguments{
 \item{chm}{raster. canopy height model}
@@ -32,7 +24,7 @@ compute correlation values, should be a multiple of raster resolution}
 \item{plot}{boolean. whether to display the results or not}
 }
 \value{
-A list with two elements : first the correlation raster returned by 
+A list with two elements : first the correlation SpatRaster returned by 
 \code{\link{rasters_moving_cor}}, second a data.frame returned by 
 \code{\link{raster_local_max}}
 }
@@ -55,16 +47,14 @@ tree_mask <- raster_xy_mask(rbind(c(20, 20), c(20, 20)), c(9, 9), tree_mask,
 binary = TRUE)
 
 # simulate chm raster
-chm <- raster::raster()
-raster::extent(chm) <- c(0, 40, 0, 40)
-raster::res(chm) <- 1
-xy <- raster::xyFromCell(chm, 1:length(chm))
+chm <- terra::rast(extent = c(0, 40, 0, 40), resolution = 1, crs = NA)
+xy <- terra::xyFromCell(chm, 1:(ncol(chm) * nrow(chm)))
 
 # add Gaussian surfaces to simulate tree crowns
 z1 <- trees$z[1] * exp(-((xy[, 1] - trees$x[1])^2 + (xy[, 2] - trees$y[1])^2 / 2) * trees$z[1] / 50)
 z2 <- trees$z[2] * exp(-((xy[, 1] - trees$x[2])^2 + (xy[, 2] - trees$y[2])^2 / 2) * trees$z[2] / 50)
 z3 <- trees$z[3] * exp(-((xy[, 1] - trees$x[3])^2 + (xy[, 2] - trees$y[3])^2 / 2) * trees$z[3] / 50)
-chm <- raster::rasterFromXYZ(cbind(xy, pmax(z1, z2, z3))) #+rnorm(length(z1),0,1)))
+chm <- terra::rast(cbind(xy, pmax(z1, z2, z3)), type = "xyz") #+rnorm(length(z1),0,1)))
 
 # translate trees
 trees$x <- trees$x + 1
@@ -74,7 +64,7 @@ coreg <- coregistration(chm, trees, mask = tree_mask, buffer = 5, step = 1, dm =
 coreg$local_max[, c("dx1", "dy1")]
 
 # plot raster
-raster::plot(coreg$correlation_raster)
+terra::plot(coreg$correlation_raster)
 abline(h = 0, lty = 2)
 abline(v = 0, lty = 2)
 # add location of two local maxima

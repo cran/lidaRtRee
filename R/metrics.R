@@ -15,7 +15,7 @@
 #' @return A data frame with metrics in columns corresponding to LAS objects of
 #' the list (lines)
 #' @seealso \code{\link[lidR]{cloud_metrics}}, \code{\link[lidR]{stdmetrics}},
-#' \code{\link{aba_metrics}}
+#' \code{\link{aba_metrics}}, \code{\link[lidR]{pixel_metrics}}
 #' @examples
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
@@ -117,10 +117,11 @@ clouds_metrics <- function(llasn,
 #' llas <- lapply(llas, function(x) {
 #'   lidR::normalize_height(x, lidR::tin())
 #' })
-#' # computes metrics including strata 
-#' m1 <- clouds_metrics(llas, ~ aba_metrics(
+#' # computes metrics 
+#' m <- clouds_metrics(llas, ~ aba_metrics(
 #'  Z, Intensity, ReturnNumber, Classification, 2
 #' ))
+#' head(m[,1:5])
 #' @rdname aba_metrics
 #' @export
 aba_metrics <- function(z, i, rn, c, hmin = 2, breaksH = NULL) {
@@ -181,7 +182,7 @@ aba_metrics <- function(z, i, rn, c, hmin = 2, breaksH = NULL) {
 #' \item \code{Tree_meanCrownVolume}: mean volume of detected trees
 #' \item \code{TreeCanopy_meanH}: mean height of union of crowns of detected trees
 #' }
-#' @seealso \code{\link{tree_extraction}}
+#' @seealso \code{\link{tree_extraction}}, \code{\link{clouds_tree_metrics}}, \code{\link{raster_metrics}}
 #' @examples
 #' # sample 50 height values
 #' h <- runif(50, 5, 40)
@@ -213,18 +214,18 @@ std_tree_metrics <- function(x, area_ha = NA) {
 #' \itemize{
 #' \item{exposition}
 #' \item{altitude}
-#' \item{slope}
+#' \item{slope}.
 #' }
-#' values are computed after fitting a plane to the points. It supposes a 
+#' Values are computed after fitting a plane to the points. It supposes a 
 #' homogeneous sampling of the plot by points. Points can be cropped on disk if 
 #' center and radius are provided. In case a centre is provided, the altitude 
 #' is computed by bilinear interpolation at the center location 
-#' (\code{\link[lidR]{grid_metrics}} with \code{\link[lidR]{tin}} algorithm), 
+#' (\code{\link[lidR]{rasterize_terrain}} with \code{\link[lidR]{tin}} algorithm), 
 #' otherwise it is the mean of the points altitude range.
 #'
 #' @param p matrix, data.frame or \code{\link[lidR]{LAS}} object with ground point 
 #' coordinates (X, Y, Z). In case of an object which is not LAS, the object is first 
-#' converted, which issues a warning
+#' converted.
 #' @param centre vector. x y coordinates of center to extract points inside a disc
 #' @param r numeric. radius of disc
 #' @return a data.frame with altitude, exposition (gr), slope (gr) and adjR2 of 
@@ -239,8 +240,6 @@ std_tree_metrics <- function(x, area_ha = NA) {
 #' # with a LAS object
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#' # set projection
-#' # lidR::projection(las_chablais3) <- 2154
 #' terrain_points <- lidR::filter_ground(las_chablais3)
 #' terrain_points_metrics(terrain_points)
 #' terrain_points_metrics(terrain_points, centre = c(974360, 6581650), r = 10)
@@ -250,9 +249,9 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
   # if LAS object, extract coordinates
   if (!inherits(p, "LAS")) {
     # create LAS file from points
-    p <- lidR::LAS(data.frame(X = p[, 1], Y = p[, 2], Z = p[, 3], Classification = 2L),
+    p <- suppressMessages(lidR::LAS(data.frame(X = p[, 1], Y = p[, 2], Z = p[, 3], Classification = 2L),
       check = FALSE
-    )
+    ))
   }
   # extract points inside disc if information is provided
   if (!is.null(r) & !is.null(centre)) {
@@ -267,11 +266,11 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
     )
   }
   # compute statistics if enough points are present
-  if (nrow(p@data) <= 1) {
+  if (nrow(p) <= 1) {
     return(NULL)
   }
   # compute plane equation
-  modlin <- stats::lm(Z ~ X + Y, data = p@data)
+  modlin <- stats::lm(altitude ~ X + Y, data = data.frame(X = p$X, Y = p$Y, altitude = p$Z))
   # model z=a+bx+cy
   # normal vector: b c -1 (under plane)
   a <- modlin$coefficients[1]
@@ -288,19 +287,18 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
   # extract altitude at centre if provided
   # else output mean of range
   if (!is.null(centre)) {
-    # use grid_terrain function to perform bilinear interpolation on one point
+    # use rasterize_terrain function to perform bilinear interpolation on one point
     # create raster with one cell at location of interest
-    dummyRaster <- raster::raster(raster::extent(
+    dummyRaster <- terra::rast(extent= c(
       as.numeric(centre[1]) - 0.5, as.numeric(centre[1]) + 0.5,
       as.numeric(centre[2]) - 0.5, as.numeric(centre[2]) + 0.5
-    ))
-    raster::res(dummyRaster) <- 1
-    altitude <- raster::values(lidR::grid_terrain(p, dummyRaster, lidR::tin()))
+    ), resolution = 1)
+    altitude <- as.numeric(terra::values(lidR::rasterize_terrain(p, dummyRaster, lidR::tin())))
   } else {
     altitude <- NA
   }
   if (is.na(altitude)) {
-    altitude <- mean(range(p@data$Z))
+    altitude <- mean(range(p$Z))
   }
   # output
   round(data.frame(
@@ -360,7 +358,7 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #'   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))
 #' }
 #' clouds_tree_metrics(llas,
-#'   cbind(c(974350, 974390, 974350), c(6581680, 6581680, 6581640)),
+#'   cbind(c(974350, 974390), c(6581680, 6581680)),
 #'   8,
 #'   res = 0.5, func = user_func
 #' )
@@ -395,9 +393,9 @@ clouds_tree_metrics <- function(llasn, XY, plot_radius, res = 0.5, func, ...) {
     # tree extraction
     ltrees[[names(llasn)[i]]] <- tree_extraction(dummy$filled_dem, dummy$local_maxima, dummy$segments_id, mask)
     # compute tree canopy cover fraction and mean height inside area of interest
-    TreeCanopy_cover_in_plot <- sum(raster::values((dummy$segments_id > 0) * mask), na.rm = TRUE) / sum(raster::values(mask))
+    TreeCanopy_cover_in_plot <- sum(terra::values((dummy$segments_id > 0) * mask), na.rm = TRUE) / sum(terra::values(mask))
     mask[mask == 0 | dummy$segments_id == 0] <- NA
-    TreeCanopy_meanH_in_plot <- mean(raster::values(dummy$filled_dem * mask), na.rm = TRUE)
+    TreeCanopy_meanH_in_plot <- mean(terra::values(dummy$filled_dem * mask), na.rm = TRUE)
     lcanopy[[names(llasn)[i]]] <- data.frame(TreeCanopy_cover_in_plot, TreeCanopy_meanH_in_plot)
   }
   #

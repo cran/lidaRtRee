@@ -7,14 +7,14 @@
 edge_detection(gaps, inside = TRUE)
 }
 \arguments{
-\item{gaps}{raster object. gaps image where 1 represents gaps and 0 non-gaps 
+\item{gaps}{SpatRaster object. gaps image where 1 represents gaps and 0 non-gaps 
 areas}
 
 \item{inside}{boolean. defines where the edge is extracted: either inside the 
 gaps (an erosion is applied to the gaps image) or outside (a dilation is applied)}
 }
 \value{
-A raster object where edges are labelled as 1.
+A SpatRaster object where edges are labelled as 1.
 }
 \description{
 Performs edge detection on a gap image (e.g. output from function 
@@ -23,6 +23,7 @@ has undergone a dilation or erosion to identify edges of gaps.
 }
 \examples{
 data(chm_chablais3)
+chm_chablais3 <- terra::rast(chm_chablais3)
 
 # fill NA values in canopy height model
 chm_chablais3[is.na(chm_chablais3)] <- 0
@@ -37,19 +38,19 @@ gaps <- gap_detection(chm_chablais3,
 edges_inside <- edge_detection(!is.na(gaps$gap_id))
 edges_outside <- edge_detection(!is.na(gaps$gap_id), inside = FALSE)
 
-# edge propotion
-sum(raster::values(edges_inside)) / (nrow(edges_inside) * ncol(edges_inside))
-sum(raster::values(edges_outside)) / (nrow(edges_outside) * ncol(edges_outside))
+# edge proportion
+sum(terra::values(edges_inside)) / (nrow(edges_inside) * ncol(edges_inside))
+sum(terra::values(edges_outside)) / (nrow(edges_outside) * ncol(edges_outside))
 
 # plot original image
-raster::plot(chm_chablais3, main = "Initial image")
+terra::plot(chm_chablais3, main = "Initial image")
 
 # plot binary image of gaps
-raster::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
 
 # plot edges
-raster::plot(edges_inside, main = "Edges (inside)", legend = FALSE)
-raster::plot(edges_outside, main = "Edges (outside)", legend = FALSE)
+terra::plot(edges_inside, main = "Edges (inside)", legend = FALSE)
+terra::plot(edges_outside, main = "Edges (outside)", legend = FALSE)
 }
 \seealso{
 \code{\link{gap_detection}}

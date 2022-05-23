@@ -3,10 +3,31 @@
 # Author(s): Jean-Matthieu Monnet
 # Licence: GPL-3
 #-------------------------------------------------------------------------------
+#' Load las_chablais3
+#'
+#' Loads the external data: Airborne laser scanning data over the
+#'  Chablais 3 plot, acquired in 2009 by Sintegra
+#' @return An object of class \code{\link[lidR]{LAS}}.
+#' @seealso \code{\link{las_chablais3}}
+#' @examples
+#' las_chablais3 <- aa_las_chablais3()
+#' @keywords internal
+#' @export
+aa_las_chablais3 <- function() {
+  LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
+  las_chablais3 <- lidR::readLAS(LASfile)
+  # set projection
+  lidR::projection(las_chablais3) <- 2154
+  las_chablais3
+}
+
+#-------------------------------------------------------------------------------
 #' Digital Surface Model
 #'
-#' Creates a Digital Surface Model from LAS object. Raster extent is specified
-#' by the coordinates of lower left and upper right corners. Default extent covers
+#' Creates a Digital Surface Model from a LAS object. From version 4.0.0 relies on \code{\link[lidR]{rasterize_canopy}}.
+#' Maintained for backward compatibility but a direct call to this function 
+#' should be preferred. Raster extent is specified by the coordinates of lower
+#' left and upper right corners. Default extent covers
 #'  the full range of points, and aligns on multiple values of the resolution.
 #'  Cell value is the maximum height of points contained in the cell.
 #'
@@ -16,7 +37,7 @@
 #' @param xmax numeric. upper right corner easting coordinate for output raster.
 #' @param ymin numeric. lower left corner northing coordinate for output raster.
 #' @param ymax numeric. upper right corner northing coordinate for output raster.
-#' @return A raster object.
+#' @return A SpatRaster object.
 #' @seealso \code{\link{points2DTM}} for Digital Terrain Model computation.
 #' @examples
 #' # load LAS file
@@ -29,33 +50,25 @@
 #' dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)
 #'
 #' # display raster
-#' raster::plot(dsm, asp = 1)
+#' terra::plot(dsm)
 #' @export
 points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
   # in case input is not a las object
-  if (class(.las)[1] != "LAS") {
+  if (!inherits(.las, "LAS")) {
     .las <- lidR::LAS(data = data.frame(X = .las[, 1], Y = .las[, 2], Z = .las[, 3]))
   }
   #
   if (missing(xmin) | missing(xmax) | missing(ymin) | missing(ymax)) # if no extent info
     {
-      xmin <- floor(min(.las@data$X) / res) * res
-      xmax <- ceiling(max(.las@data$X) / res) * res
-      ymin <- floor(min(.las@data$Y) / res) * res
-      ymax <- ceiling(max(.las@data$Y) / res) * res
+      xmin <- floor(sf::st_bbox(.las)$xmin / res) * res
+      xmax <- ceiling(sf::st_bbox(.las)$xmax / res) * res
+      ymin <- floor(sf::st_bbox(.las)$ymin / res) * res
+      ymax <- ceiling(sf::st_bbox(.las)$ymax / res) * res
     }
   # create empty raster
-  r <- raster::raster()
-  raster::extent(r) <- c(xmin, xmax, ymin, ymax)
-  raster::res(r) <- res
-  raster::crs(r) <- lidR::projection(.las)
+  r <- terra::rast(extent = c(xmin, xmax, ymin, ymax), resolution = res, crs = sf::st_crs(.las)$wkt)
   # convert LAS coordinates to spatial data
-  points <- as.data.frame(.las@data[, 1:2])
-  sp::coordinates(points) <- c(1, 2)
-  sp::proj4string(points) <- lidR::projection(.las)
-  # rasterize with max function
-  val <- .las@data[, 3]
-  raster::rasterize(points, r, val, fun = max)
+  lidR::rasterize_canopy(.las, r, algorithm = lidR::p2r(), pkg = "terra")
 }
 
 #-------------------------------------------------------------------------------
@@ -65,10 +78,9 @@ points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
 #' specified by the coordinates of lower left and upper right corners. Default 
 #' extent covers the full range of points, and aligns on multiple values of the 
 #' resolution. Cell value is compute as the bilinear interpolation at the cell 
-#' center form an Delaunay triangulation. Relies on \code{\link[lidR]{grid_terrain}} 
+#' center form an Delaunay triangulation. Relies on \code{\link[lidR]{rasterize_terrain}} 
 #' with algorithm \code{\link[lidR]{tin}}. In case a LAS object is provided, only 
-#' points classified as ground or water (2 or 9) will be used; a warning is issued 
-#' when the raster output inherits the projection info from LAS input.
+#' points classified as ground or water (2 or 9) will be used.
 #'
 #' @param .las \code{\link[lidR]{LAS}} object or XYZ matrix/data.frame containing 
 #' only ground points
@@ -78,100 +90,39 @@ points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
 #' @param ymin numeric. lower left corner northing coordinate for output raster.
 #' @param ymax numeric. upper right corner northing coordinate for output raster.
 #' @seealso \code{\link{points2DSM}} for Digital Surface Model computation.
-#' @return A raster object
+#' @return A SpatRaster object
 #' @examples
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
 #' # set projection
-#' # lidR::projection(las_chablais3) <- 2154
+#' lidR::projection(las_chablais3) <- 2154
 #'
 #' # create digital terrain model with points classified as ground
 #' dtm <- points2DTM(las_chablais3)
 #'
 #' # display raster
-#' raster::plot(dtm, asp = 1)
+#' terra::plot(dtm)
 #' @export
 points2DTM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
   # in case input is not a las object
-  if (class(.las)[1] != "LAS") {
+  if (!inherits(.las, "LAS")) {
     .las <- lidR::LAS(data = data.frame(X = .las[, 1], Y = .las[, 2], Z = .las[, 3], Classification = 2L))
   }
   #
   if (missing(xmin) | missing(xmax) | missing(ymin) | missing(ymax)) # if no extent info
     {
-      xmin <- floor(min(.las@data$X) / res) * res
-      xmax <- ceiling(max(.las@data$X) / res) * res
-      ymin <- floor(min(.las@data$Y) / res) * res
-      ymax <- ceiling(max(.las@data$Y) / res) * res
+    xmin <- floor(sf::st_bbox(.las)$xmin / res) * res
+    xmax <- ceiling(sf::st_bbox(.las)$xmax / res) * res
+    ymin <- floor(sf::st_bbox(.las)$ymin / res) * res
+    ymax <- ceiling(sf::st_bbox(.las)$ymax / res) * res
     }
-  # create target raster
-  dtm <- raster::raster(xmn = xmin, xmx = xmax, ymn = ymin, ymx = ymax, resolution = res, crs = lidR::projection(.las))
-  # dtm.stars <- stars::st_as_stars(dtm)
-  # sf::st_crs(dtm.stars) <- lidR::projection(.las)
-  dtm <- lidR::grid_terrain(.las, dtm, lidR::tin())
-  # raster::projection(dtm) <- lidR::projection(.las)
+  # create empty raster
+  r <- terra::rast(extent = c(xmin, xmax, ymin, ymax), resolution = res, crs = sf::st_crs(.las)$wkt)
+  #
+  dtm <- lidR::rasterize_terrain(.las, r, lidR::tin(), pkg = "terra")
   return(dtm)
 }
-
-#-------------------------------------------------------------------------------
-# #' creates Digital Elevation Model from LAS object and extent info 
-# #' (parallelized version)
-# #' tiles extent and calls points2DTM or points2DSM
-# #'
-# #' @param .las LAS object (from \code{lidR} package)
-# #' @param type model to return ("dsm" or "dtm")
-# #' @param res the raster resolution
-# #' @param xmin the raster lower left corner easting coordinate
-# #' @param xmax the raster upper right corner easting coordinate
-# #' @param ymin the raster lower left corner northing coordinate
-# #' @param ymax the raster upper right corner northing coordinate
-# #' @param method a string specifying the interpolation method
-# #' @param buffer the size of buffer area for tiling
-# #' @param tile.size the size of tiles for parallelisation
-# #' @param n.cores the number of cores to use
-# #' @return a raster object
-# #' @export
-# points2DEM = function(.las, type="dtm", res = 1, xmin, xmax, ymin, ymax, method="delaunay", buffer=5, tile.size=250, n.cores=4)
-# {
-#   doParallel::registerDoParallel(cores=n.cores)
-#   if (missing(xmin) | missing(xmax) | missing(ymin) | missing(ymax)) # if no extent info
-#   {
-#     xmin <- floor(min(.las@data$X)/res)*res
-#     xmax <- ceiling(max(.las@data$X)/res)*res
-#     ymin <- floor(min(.las@data$Y)/res)*res
-#     ymax <- ceiling(max(.las@data$Y)/res)*res
-#   }
-#   # low left corner
-#   xlow <- floor(xmin/tile.size)*tile.size
-#   ylow <- floor(ymin/tile.size)*tile.size
-#   # tiles indices which intersect the extent
-#   i <- 0
-#   j <- 0
-#   n <- 1
-#   l <- list()
-#   while(xlow+i*tile.size<xmax)
-#   {
-#     while(ylow + j * tile.size < ymax)
-#     {
-#       l[[n]] <- c(i,j)
-#       n <- n+1
-#       j <- j+1
-#     }
-#     i <- i+1
-#     j <- 0
-#   }
-#   l <- foreach::foreach(i=1:length(l), .errorhandling="remove") %dopar%
-#   {
-#     coord <- c(max(xmin, xlow+l[[i]][1]*tile.size), min(xmax, xlow+(l[[i]][1]+1)*tile.size), max(ymin, ylow+l[[i]][2]*tile.size), min(ymax, ylow+(l[[i]][2]+1)*tile.size))
-#     dummy <- .las %>% lidR::lasfilter(X >= coord[1]-buffer & X <= coord[2]+buffer & Y >= coord[3]-buffer & Y <= coord[4]+buffer)
-#     if (type=="dtm") {return(points2DTM(dummy, res = res, coord[1], coord[2], coord[3], coord[4], method=method))}
-#     else {return(points2DSM(dummy, res = res, coord[1], coord[2], coord[3], coord[4]))}
-#   }
-#   l$fun <- mean
-#   l$na.rm <- TRUE
-#   do.call(raster::mosaic, l)
-# }
 
 #-------------------------------------------------------------------------------
 #' Polar to cartesian coordinates conversion
@@ -350,7 +301,8 @@ species_color <- function() {
 #'
 #' # display tree inventory with CHM background
 #' data("chm_chablais3")
-#' raster::plot(chm_chablais3, col = gray(seq(0, 1, 1 / 255)))
+#' chm_chablais3 <- terra::rast(chm_chablais3)
+#' terra::plot(chm_chablais3, col = gray(seq(0, 1, 1 / 255)))
 #' plot_tree_inventory(tree_inventory_chablais3[, c("x", "y")],
 #'   height = tree_inventory_chablais3$h,
 #'   species = tree_inventory_chablais3$s,
@@ -432,9 +384,7 @@ plot_tree_inventory <- function(xy, height = NULL, diam = NULL,
 #' @seealso \code{\link{raster_chull_mask}}
 #' @examples
 #' # create raster
-#' r <- raster::raster()
-#' raster::extent(r) <- c(0, 40, 0, 40)
-#' raster::res(r) <- 1
+#' r <- terra::rast(xmin=0, xmax = 40, ymin = 0, ymax = 40, resolution = 1, crs= NA )
 #'
 #' # xy positions
 #' xy <- data.frame(
@@ -446,11 +396,11 @@ plot_tree_inventory <- function(xy, height = NULL, diam = NULL,
 #' mask2 <- raster_xy_mask(xy, c(5, 8, 5, 5), r, binary = FALSE)
 #'
 #' # display binary raster
-#' raster::plot(mask1)
+#' terra::plot(mask1)
 #' graphics::points(xy)
 #'
 #' # display distance raster
-#' raster::plot(mask2)
+#'terra::plot(mask2)
 #' graphics::points(xy)
 #' @export
 raster_xy_mask <- function(xy, buff, r, binary = TRUE) {
@@ -461,9 +411,9 @@ raster_xy_mask <- function(xy, buff, r, binary = TRUE) {
   # compute squared buffers
   buff2 <- buff^2
   # compute XY coordinates of cell centers
-  dummyXY <- raster::xyFromCell(r, 1:length(r))
+  dummyXY <- terra::xyFromCell(r, 1:(nrow(r)*ncol(r)))
   # create matrix of cell values
-  val <- matrix(NA, nrow = length(r), ncol = nrow(xy))
+  val <- matrix(NA, nrow = nrow(r)*ncol(r), ncol = nrow(xy))
   # compute cell value for each position
   for (i in 1:nrow(xy))
   {
@@ -476,7 +426,7 @@ raster_xy_mask <- function(xy, buff, r, binary = TRUE) {
   if (binary) {
     val <- val > 0
   }
-  raster::values(r) <- val
+  terra::values(r) <- val
   r
 }
 
@@ -487,23 +437,22 @@ raster_xy_mask <- function(xy, buff, r, binary = TRUE) {
 #'
 #' @param xy 2 columns matrix or data.frame. xy positions
 #' @param r raster object. target raster
-#' @return a raster with 0 or 1
+#' @return a SpatRaster with 0 or 1
 #' @examples
 #' # create raster
-#' r <- raster::raster()
-#' raster::extent(r) <- c(0, 40, 0, 40)
-#' raster::res(r) <- 1
+#' r <- terra::rast(extent = c(0, 40, 0, 40), resolution = 1, crs = "epsg:2154")
+#' 
 #'
 #' # xy positions
 #' xy <- data.frame(
-#'   c(10, 20, 31.25, 15),
-#'   c(10, 20, 31.25, 25)
+#'   x = c(10, 20, 31.25, 15),
+#'   y = c(10, 20, 31.25, 25)
 #' )
 #' # compute mask
 #' mask1 <- raster_chull_mask(xy, r)
 #'
 #' # display binary raster
-#' raster::plot(mask1)
+#' terra::plot(mask1)
 #' graphics::points(xy)
 #' @seealso \code{\link{raster_xy_mask}}
 #' @export
@@ -511,12 +460,14 @@ raster_chull_mask <- function(xy, r) {
   # points on convexHull
   idchull <- grDevices::chull(xy)
   #
-  # create chull polygon
-  Po <- sp::Polygons(list(sp::Polygon(xy[c(idchull, idchull[1]), ])), 1)
-  sPo <- sp::SpatialPolygons(list(Po), proj4string = r@crs)
+  # create chull polygon sf
+  polygon <- sf::st_polygon(list(as.matrix(xy[c(idchull, idchull[1]), ])))
+  # convert so SpatVector
+  polygon <- terra::vect(polygon)
   # rasterize polygon
-  dummy <- raster::rasterize(sPo, r)
+  dummy <- terra::rasterize(polygon, r)
   dummy[is.na(dummy)] <- 0
+  terra::crs(dummy) <- terra::crs(r)
   dummy
 }
 
@@ -551,7 +502,7 @@ raster_chull_mask <- function(xy, r) {
 #' lines(ellipses1[[2]])
 #' lines(ellipses2[[1]], col = "red")
 #' lines(ellipses2[[2]], col = "red")
-#' @seealso \code{\link{pointList2SPDF}}
+#' @seealso \code{\link{pointList2poly}}
 #' @export
 ellipses4Crown <- function(x, y, n, s, e, w, id = NULL, step = pi / 12, 
                            angle.offset = 0) {
@@ -569,13 +520,13 @@ ellipses4Crown <- function(x, y, n, s, e, w, id = NULL, step = pi / 12,
   X3 <- matrix(w, nrow = length(w)) %*% matrix(cos(a), ncol = length(a))
   Y3 <- matrix(s, nrow = length(s)) %*% matrix(sin(a), ncol = length(a))
   # SE quadrant
-  a <- seq(from = 3 * pi / 2, to = 2 * pi, by = step)
+  a <- seq(from = 3 * pi / 2, to = 2 * pi - step, by = step)
   X4 <- matrix(e, nrow = length(e)) %*% matrix(cos(a), ncol = length(a))
   Y4 <- matrix(s, nrow = length(s)) %*% matrix(sin(a), ncol = length(a))
   #
-  X <- cbind(X1, X2, X3, X4)
-  Y <- cbind(Y1, Y2, Y3, Y4)
-  # create list of cordinates for each crown
+  X <- cbind(X1, X2, X3, X4, X1[,1])
+  Y <- cbind(Y1, Y2, Y3, Y4, Y1[,1])
+  # create list of coordinates for each crown
   l <- list()
   # translate and rotation polygons
   for (i in 1:length(x))
@@ -606,55 +557,163 @@ ellipses4Crown <- function(x, y, n, s, e, w, id = NULL, step = pi / 12,
   }
 }
 
+# #-------------------------------------------------------------------------------
+# #' Convert list of points into Spatial Polygons DataFrame object
+# #'
+# #' Converts a list of points specifying polygons into a Spatial Polygons DataFrame 
+# #' object
+# #'
+# #' @param points.list list of dataframes of xy coordinates. The first and last 
+# #' coordinates in each dataframe must be the same
+# #' @param df data.frame. Optional data.frame to be associated to Spatial Polygons
+# #' @param ... arguments to be passed to \code{\link[sp]{SpatialPolygons}}
+# #' @return an object of class \link[sp]{SpatialPolygons-class}, or class 
+# #' \link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
+# #' @examples
+# #' # Compute coordinates of polygons
+# #' ellipses <- ellipses4Crown(c(0, 10), c(0, 10), c(2, 2), c(3, 4), c(2.5, 3), c(2, 3),
+# #'   id = c("A", "B")
+# #' )
+# #' # Convert to Spatial object
+# #' ellipses1 <- pointList2SPDF(ellipses)
+# #' ellipses1
+# #' # Convert to Spatial object with data.frame
+# #' ellipses2 <- pointList2SPDF(ellipses, df = data.frame(info = 1:2))
+# #'
+# #' # draw ellipses
+# #' sp::plot(ellipses2, col = ellipses2$info)
+# #' @seealso \code{\link{ellipses4Crown}}
+# #' @export
+# pointList2SPDF <- function(points.list, df = NULL, ...) {
+#   # convert each element of list of coodinates to Polygon
+#   H <- lapply(points.list, FUN = function(x) {
+#     sp::Polygon(x, hole = F)
+#   })
+#   # convert to Polygons
+#   Hs <- lapply(H, function(x) {
+#     sp::Polygons(list(x), "temp")
+#   })
+#   # change ID
+#   if (!is.null(names(points.list))) {
+#     for (i in 1:length(Hs)) {
+#       Hs[[i]]@ID <- names(points.list)[i]
+#     }
+#   }
+#   # convert to spatial polygons
+#   sp.H <- sp::SpatialPolygons(Hs, ...)
+#   if (!is.null(df)) {
+#     sp::SpatialPolygonsDataFrame(sp.H, df, match.ID = FALSE)
+#   } else {
+#     sp.H
+#   }
+# }
+
 #-------------------------------------------------------------------------------
-#' Convert list of points into Spatial Polygons DataFrame object
+#' Convert a list of points into spatial polygons object
 #'
-#' Converts a list of points specifying polygons into a Spatial Polygons DataFrame 
-#' object
+#' Converts a list of points specifying polygons into a spatial object 
 #'
-#' @param points.list list of dataframes of xy coordinates. The first and last 
-#' coordinates in each dataframe must be the same
-#' @param df data.frame. Optional data.frame to be associated to Spatial Polygons
-#' @param ... arguments to be passed to \code{\link[sp]{SpatialPolygons}}
-#' @return an object of class \link[sp]{SpatialPolygons-class}, or class 
-#' \link[sp]{SpatialPolygonsDataFrame-class} if input data.frame is specified.
+#' @param points_list list of data frames of xy coordinates. In each data.frame 
+#' the last row must be the same as the first row 
+#' @param df data.frame. Optional data.frame to be associated to polygons
+#' @param ... arguments to be passed to \code{\link[sf]{st_sfc}}
+#' @return a simple feature collection with POLYGON geometry.
 #' @examples
 #' # Compute coordinates of polygons
 #' ellipses <- ellipses4Crown(c(0, 10), c(0, 10), c(2, 2), c(3, 4), c(2.5, 3), c(2, 3),
 #'   id = c("A", "B")
 #' )
-#' # Convert to Spatial object
-#' ellipses1 <- pointList2SPDF(ellipses)
+#' # Convert to sf object
+#' ellipses1 <- pointList2poly(ellipses)
 #' ellipses1
-#' # Convert to Spatial object with data.frame
-#' ellipses2 <- pointList2SPDF(ellipses, df = data.frame(info = 1:2))
+#' # Convert to sf object with user-defined data.frame
+#' ellipses2 <- pointList2poly(ellipses, df = data.frame(info = 1:2))
 #'
 #' # draw ellipses
-#' sp::plot(ellipses2, col = ellipses2$info)
+#' plot(ellipses2, col = ellipses2$info)
 #' @seealso \code{\link{ellipses4Crown}}
 #' @export
-pointList2SPDF <- function(points.list, df = NULL, ...) {
-  # convert each element of list of coodinates to Polygon
-  H <- lapply(points.list, FUN = function(x) {
-    sp::Polygon(x, hole = F)
-  })
-  # convert to Polygons
-  Hs <- lapply(H, function(x) {
-    sp::Polygons(list(x), "temp")
-  })
-  # change ID
-  if (!is.null(names(points.list))) {
-    for (i in 1:length(Hs)) {
-      Hs[[i]]@ID <- names(points.list)[i]
+pointList2poly <- function(points_list, df = NULL, ...) {
+  points_list <- lapply(points_list, function(x) list(x))
+  # convert each element of list of coordinates to polygon
+  polygons <- lapply(points_list, sf::st_polygon)
+  # convert to geometry collection
+  polygons <- sf::st_sfc(polygons, ...)
+  # add data.frame
+  if (is.null(df))
+  {
+    if(is.null(names(points_list)))
+    {
+      # set number as id
+      df <- data.frame(id = 1:length(points_list))
+    } else {
+      df <- data.frame(id=names(points_list))
     }
   }
-  # convert to spatial polygons
-  sp.H <- sp::SpatialPolygons(Hs, ...)
-  if (!is.null(df)) {
-    sp::SpatialPolygonsDataFrame(sp.H, df, match.ID = FALSE)
-  } else {
-    sp.H
+  sf::st_sf(df, polygons)
+}
+
+#-------------------------------------------------------------------------------
+#' Raster format conversion
+#'
+#' Function to convert between raster formats. Use pkg = "terra|raster|stars" to get an output in SpatRaster, RasterLayer
+#' or stars format. Default is getOption("lidR.raster.default").
+#'
+#' @param r raster object or file name.
+#' @param pkg package name. Use pkg = "terra|
+#' raster|stars" to get an output in SpatRaster, RasterLayer or stars format 
+#' @return A raster object in the specified format
+#' @examples
+#' # load SpatRaster
+#' data(chm_chablais3)
+#' chm_chablais3 <- terra::rast(chm_chablais3)
+#' # to stars
+#' chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
+#' chm_stars
+#' # to raster
+#' chm_raster <- convert_raster(chm_stars, pkg = "raster")
+#' chm_raster
+#' # back to terra
+#' convert_raster(chm_raster, pkg = "terra")
+#' @export
+convert_raster <- function(r, pkg = NULL) {
+  # default option corresponds to lidR package 
+  if (is.null(pkg)) pkg <-  getOption("lidR.raster.default")
+  # if no lidR option then defaults to terra
+  if (is.null(pkg)) pkg <-  "terra"
+  #
+  dummy_names <- NULL
+  if (inherits(r, "stars")) dummy_names <- names(r)
+  # 
+  if (pkg == "terra")
+  {
+    if(inherits(r, "SpatRaster"))
+    {
+      r <- terra::deepcopy(r)
+    } else {
+      r <- terra::rast(r)
+    }
   }
+  if (pkg == "stars")
+  {
+    # load from file
+    if (inherits(r, "character"))
+    {
+      r <- stars::read_stars(r)
+    } else {
+      r <- stars::st_as_stars(r)
+    }
+  }
+  if (pkg == "raster")
+  {
+    if (inherits(r, "stars"))
+      {
+      r <- terra::rast(r)
+    }
+    r <- raster::raster(r)
+  }
+  if (!is.null(dummy_names)) names(r) <- dummy_names
+  r
 }
 
 #-------------------------------------------------------------------------------

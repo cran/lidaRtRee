@@ -20,11 +20,13 @@ points2DSM(.las, res = 1, xmin, xmax, ymin, ymax)
 \item{ymax}{numeric. upper right corner northing coordinate for output raster.}
 }
 \value{
-A raster object.
+A SpatRaster object.
 }
 \description{
-Creates a Digital Surface Model from LAS object. Raster extent is specified
-by the coordinates of lower left and upper right corners. Default extent covers
+Creates a Digital Surface Model from a LAS object. From version 4.0.0 relies on \code{\link[lidR]{rasterize_canopy}}.
+Maintained for backward compatibility but a direct call to this function 
+should be preferred. Raster extent is specified by the coordinates of lower
+left and upper right corners. Default extent covers
  the full range of points, and aligns on multiple values of the resolution.
  Cell value is the maximum height of points contained in the cell.
 }
@@ -39,7 +41,7 @@ lidR::projection(las_chablais3) <- 2154
 dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)
 
 # display raster
-raster::plot(dsm, asp = 1)
+terra::plot(dsm)
 }
 \seealso{
 \code{\link{points2DTM}} for Digital Terrain Model computation.

@@ -21,30 +21,29 @@ only ground points}
 \item{ymax}{numeric. upper right corner northing coordinate for output raster.}
 }
 \value{
-A raster object
+A SpatRaster object
 }
 \description{
 Creates a Digital Terrain Model from LAS object or XYZ data. Raster extent is
 specified by the coordinates of lower left and upper right corners. Default 
 extent covers the full range of points, and aligns on multiple values of the 
 resolution. Cell value is compute as the bilinear interpolation at the cell 
-center form an Delaunay triangulation. Relies on \code{\link[lidR]{grid_terrain}} 
+center form an Delaunay triangulation. Relies on \code{\link[lidR]{rasterize_terrain}} 
 with algorithm \code{\link[lidR]{tin}}. In case a LAS object is provided, only 
-points classified as ground or water (2 or 9) will be used; a warning is issued 
-when the raster output inherits the projection info from LAS input.
+points classified as ground or water (2 or 9) will be used.
 }
 \examples{
 # load LAS file
 LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 las_chablais3 <- lidR::readLAS(LASfile)
 # set projection
-# lidR::projection(las_chablais3) <- 2154
+lidR::projection(las_chablais3) <- 2154
 
 # create digital terrain model with points classified as ground
 dtm <- points2DTM(las_chablais3)
 
 # display raster
-raster::plot(dtm, asp = 1)
+terra::plot(dtm)
 }
 \seealso{
 \code{\link{points2DSM}} for Digital Surface Model computation.

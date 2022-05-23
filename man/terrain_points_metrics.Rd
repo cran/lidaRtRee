@@ -9,7 +9,7 @@ terrain_points_metrics(p, centre = NULL, r = NULL)
 \arguments{
 \item{p}{matrix, data.frame or \code{\link[lidR]{LAS}} object with ground point 
 coordinates (X, Y, Z). In case of an object which is not LAS, the object is first 
-converted, which issues a warning}
+converted.}
 
 \item{centre}{vector. x y coordinates of center to extract points inside a disc}
 
@@ -24,13 +24,13 @@ This function computes topographic variables from a point cloud
 \itemize{
 \item{exposition}
 \item{altitude}
-\item{slope}
+\item{slope}.
 }
-values are computed after fitting a plane to the points. It supposes a 
+Values are computed after fitting a plane to the points. It supposes a 
 homogeneous sampling of the plot by points. Points can be cropped on disk if 
 center and radius are provided. In case a centre is provided, the altitude 
 is computed by bilinear interpolation at the center location 
-(\code{\link[lidR]{grid_metrics}} with \code{\link[lidR]{tin}} algorithm), 
+(\code{\link[lidR]{rasterize_terrain}} with \code{\link[lidR]{tin}} algorithm), 
 otherwise it is the mean of the points altitude range.
 }
 \examples{
@@ -43,8 +43,6 @@ terrain_points_metrics(XYZ, centre = c(5, 5), r = 5)
 # with a LAS object
 LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 las_chablais3 <- lidR::readLAS(LASfile)
-# set projection
-# lidR::projection(las_chablais3) <- 2154
 terrain_points <- lidR::filter_ground(las_chablais3)
 terrain_points_metrics(terrain_points)
 terrain_points_metrics(terrain_points, centre = c(974360, 6581650), r = 10)

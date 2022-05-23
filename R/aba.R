@@ -358,9 +358,9 @@ lma_check <- function(formule,
 #-------------------------------------------------------------------------------
 #' Box-Cox Transformation
 #'
-#' @param x vector or RasterLayer. values to be transformed
+#' @param x vector or raster. values to be transformed
 #' @param lambda numeric. parameter of Box-Cox transformation
-#' @return a vector or RasterLayer of transformed values
+#' @return a vector or raster of transformed values
 #' @seealso \code{\link{boxcox_itr}} inverse Box-Cox transformation,
 #' \code{\link{boxcox_itr_bias_cor}} inverse Box-Cox transformation with bias correction.
 #' @examples
@@ -385,8 +385,8 @@ lma_check <- function(formule,
 #' )
 #' @export
 boxcox_tr <- function(x, lambda) {
-  count_neg <- ifelse(class(x)[1] == "RasterLayer",
-                      sum(raster::values(x < 0), na.rm = TRUE),
+  count_neg <- ifelse(inherits(x, "SpatRaster"),
+                      sum(terra::values(x < 0), na.rm = TRUE),
                       sum(x < 0, na.rm = TRUE))
   if (count_neg > 0) {
     x[x < 0] <- NA
@@ -402,9 +402,9 @@ boxcox_tr <- function(x, lambda) {
 #-------------------------------------------------------------------------------
 #' Inverse Box-Cox transformation
 #'
-#' @param x vector or RasterLayer. values to be transformed
+#' @param x vector or raster values to be transformed
 #' @param lambda numeric. parameter of Box-Cox transformation
-#' @return a vector or RasterLayer of transformed values
+#' @return a vector or raster of transformed values
 #' @seealso \code{\link{boxcox_tr}} Box-Cox transformation,
 #' \code{\link{boxcox_itr_bias_cor}} inverse Box-Cox transformation with bias
 #' correction.
@@ -429,8 +429,8 @@ boxcox_tr <- function(x, lambda) {
 #' )
 #' @export
 boxcox_itr <- function(x, lambda) {
-  count_neg <- ifelse(class(x)[1] == "RasterLayer",
-                      sum(raster::values(x < 0), na.rm = TRUE),
+  count_neg <- ifelse(inherits(x, "SpatRaster"),
+                      sum(terra::values(x < 0), na.rm = TRUE),
                       sum(x < 0, na.rm = TRUE))
   if (count_neg > 0) {
     x[x < 0] <- NA
@@ -449,15 +449,15 @@ boxcox_itr <- function(x, lambda) {
 #' Inverse Box-Cox transform with bias correction as suggested by Pu & Tiefelsdorf
 #' (2015). Here `varmod` is not the local prediction variance as suggested in
 #' the paper but the model residuals variance. For variance computation,
-#' use `n-p` instead of `n-1`, with `p` the number of variables in the model.
+#' uses `n-p` instead of `n-1`, with `p` the number of variables in the model.
 #'
-#' @param x vector or RasterLayer. values to be transformed
+#' @param x vector or raster values to be transformed
 #' @param lambda numeric. parameter of Box-Cox transformation
 #' @param varmod numeric. model residuals variance
 #' @references Xiaojun Pu and Michael Tiefelsdorf, 2015. A variance-stabilizing
 #' transformation to mitigate biased variogram estimation in heterogeneous
 #' surfaces with clustered samples. \doi{10.1007/978-3-319-22786-3_24}
-#' @return a vector or RasterLayer
+#' @return a vector or raster
 #' @seealso \code{\link{boxcox_tr}} Box-Cox transformation,
 #' \code{\link{boxcox_itr}} inverse Box-Cox transformation.
 #' @examples
@@ -507,7 +507,7 @@ boxcox_itr_bias_cor <- function(x, lambda, varmod) {
 #' \itemize{
 #' \item \code{model}: a list of regression models corresponding to each stratum
 #'  (output from \code{\link[stats]{lm}}),
-#' \item \code{stats}:model statistics of each stratum-specific model (as in
+#' \item \code{stats}: model statistics of each stratum-specific model (as in
 #' \code{\link{aba_build_model}}) plus one line corresponding to statistics for all
 #' strata (COMBINED)
 #' \item \code{values}: data.frame with observed and values predicted in
@@ -614,7 +614,7 @@ aba_combine_strata <- function(model.list, plotsId = NULL) {
 #' black for single models, depends on stratum in stratified models
 #' @param add_legend list. parameters to be passed to \code{\link[graphics]{legend}}. In case of a stratified model, legend is automatically set up.
 #' @param ... other parameters to be passed to \code{\link[graphics]{plot}},
-#' \code{xlab} and \code{ylab} are automatically setup
+#' \code{xlab} and \code{ylab} are automatically added
 #' @examples
 #' # load Quatre Montagnes dataset
 #' data(quatre_montagnes)
@@ -647,11 +647,11 @@ aba_plot <-
     #
     # display points, symbol color is white in case text is displayed
     graphics::plot(
-      aba_model[["values"]]$field,
       aba_model[["values"]]$predicted,
+      aba_model[["values"]]$field,
       asp = 1,
-      xlab = "Field",
-      ylab = "Predicted in LOOCV",
+      ylab = "Field",
+      xlab = "Predicted in LOOCV",
       col = ifelse(rep(disp_text, length(col)), "white", col),
       ...
     )
@@ -669,8 +669,8 @@ aba_plot <-
     # display text if required
     if (disp_text) {
       graphics::text(
-        aba_model[["values"]]$field,
         aba_model[["values"]]$predicted,
+        aba_model[["values"]]$field,
         labels = row.names(aba_model[["values"]]),
         cex = 0.8,
         col = col
@@ -682,19 +682,21 @@ aba_plot <-
 #' Mapping of ABA prediction models
 #'
 #' Applies calibrated area-based prediction models output of
-#' \code{\link{aba_build_model}} to a RasterStack of metrics to obtain a raster of
+#' \code{\link{aba_build_model}} to a raster of metrics to obtain a raster of
 #' predictions
 #'
 #' @param model_aba model returned by \code{\link{aba_build_model}} or
 #' \code{\link{aba_combine_strata}}
-#' @param metrics_map RasterStack. metrics returned e.g by
-#' \code{\link[lidR]{grid_metrics}}
+#' @param metrics_map raster. metrics returned e.g by
+#' \code{\link[lidR]{pixel_metrics}}
 #' @param stratum string. indicates which layer of metrics.map contains the
 #' \code{stratum} in case of a stratified \code{aba.model}. The layer should have a RAT
-#' including a column with the same name (see \code{\link[raster]{is.factor}}).
+#' including a column with the same name (see \code{\link[terra]{is.factor}}).
 #' @param add_error boolean. indicates whether errors sampled from a normal distribution
 #'  N(0, sigma(residuals)) should be added to fitted values; implemented only for
 #'  \code{log} transformation case
+#' @param pkg raster output format. Use pkg = "terra|raster|stars" to get an output in SpatRaster, RasterLayer
+#' or stars format.
 #' @examples
 #' # load data
 #' data(quatre_montagnes)
@@ -705,11 +707,11 @@ aba_plot <-
 #' # build example raster to apply model
 #' quatre_montagnes$X <- rep(1:8, 12)
 #' quatre_montagnes$Y <- rep(1:12, each = 8)
-#' metrics_map <- raster::rasterFromXYZ(quatre_montagnes[, c(2, 3, 9:76)])
+#' metrics_map <- terra::rast(quatre_montagnes[, c(2, 3, 9:76)], type = "xyz")
 #' predict_map <- aba_predict(model_aba, metrics_map)
 #'
 #' # plot map
-#' raster::plot(predict_map, main = "predictions")
+#' terra::plot(predict_map, main = "predictions")
 #' @seealso \link{aba_build_model} for model fitting and \link{aba_combine_strata}
 #' for combining stratified models, \link{clean_raster} for applying spatial mask
 #' and value thresholds to a raster.
@@ -721,39 +723,43 @@ aba_predict <-
   function(model_aba,
            metrics_map,
            stratum = NULL,
-           add_error = FALSE) {
-    # convert to raster stack
-    metrics_map <- raster::stack(metrics_map)
+           add_error = FALSE,
+           pkg = "terra") {
+    # convert to terra
+    if(!inherits(metrics_map, "SpatRaster")) metrics_map <- convert_raster(metrics_map, "terra")
     # create factor of stratum if not existing
     if (is.null(stratum)) {
-      metrics_map$stratum <- 1
-      levels(metrics_map$stratum) <- data.frame(ID = 1, stratum = "all")
+      metrics_map$stratum <- "all"
+      # levels(metrics_map$stratum) <- data.frame(ID = 1, stratum = "all")
       row.names(model_aba$stats)[1] <- "all"
       model_aba$model <- list("all" = model_aba$model)
       stratum <- "stratum"
     }
     #
-    dummy <- list()
+    r <- list()
     # loop on strata
-    for (i in 1:nrow(metrics_map[[stratum]]@data@attributes[[1]]))
+    for (stratum_label in terra::levels(metrics_map[[stratum]])[[1]])
     {
-      # extract stratum
-      stratum_label <-
-        as.character(metrics_map[[stratum]]@data@attributes[[1]][i, stratum])
-      stratum_id <-
-        metrics_map[[stratum]]@data@attributes[[1]][i, "ID"]
+      variables <-
+        names(model_aba$model[[stratum_label]]$coefficients)
+      variables <- variables[variables != "(Intercept)"]
+      # transform dependant variables if log
+      if (model_aba$stats[stratum_label, "transform"] == "log")
+      {
+        newdata <- log(metrics_map[[variables]])
+        names(newdata) <- variables
+      } else {
+        newdata <- metrics_map[[variables]]
+      }
       # predict on all cells
+      r[[stratum_label]] <- terra::predict(newdata,
+                                               model_aba$model[[stratum_label]])
+      
       if (model_aba$stats[stratum_label, "transform"] == "boxcox")
         # case of Box-Cox transform
       {
-        # apply linear model
-        variables <-
-          names(model_aba$model[[stratum_label]]$coefficients)
-        variables <- variables[variables != "(Intercept)"]
-        dummy[[stratum_label]] <- raster::predict(metrics_map[[variables]],
-                                                  model_aba$model[[stratum_label]])
         # back-transform
-        dummy[[stratum_label]] <- boxcox_itr_bias_cor(dummy[[stratum_label]],
+        r[[stratum_label]] <- boxcox_itr_bias_cor(r[[stratum_label]],
                                                       model_aba$stats[stratum_label, "lambda"],
                                                       model_aba$stats[stratum_label, "var_res"])
         if (add_error == TRUE) {
@@ -763,103 +769,97 @@ aba_predict <-
       if (model_aba$stats[stratum_label, "transform"] == "log")
         # case of case of log-log transform
       {
-        variables <- names(model_aba$model[[stratum_label]]$coefficients)
-        variables <- variables[variables != "(Intercept)"]
-        newdata <- log(metrics_map[[variables]])
-        names(newdata) <- variables
-        dummy[[stratum_label]] <-
-          raster::predict(newdata, model_aba$model[[stratum_label]])
         if (add_error == TRUE)
           # sampling of errors
         {
-          rastResidual <- dummy[[stratum_label]]
-          raster::values(rastResidual) <- stats::rnorm(length(rastResidual),
-                                                       0,
-                                                       sqrt(model_aba$stats[stratum_label, "var_res"]))
-          dummy[[stratum_label]] <-
-            exp(dummy[[stratum_label]] + rastResidual)
+          rastResidual <- r[[stratum_label]]
+          terra::values(rastResidual) <- stats::rnorm(length(rastResidual),
+                                                      0,
+                                                      sqrt(model_aba$stats[stratum_label, "var_res"]))
+          r[[stratum_label]] <-
+            exp(r[[stratum_label]] + rastResidual)
         } else {
           # bias correction in the case of log transformation
-          dummy[[stratum_label]] <-
-            exp(dummy[[stratum_label]]) * exp(model_aba$stats[stratum_label, "var_res"] / 2)
+          r[[stratum_label]] <-
+            exp(r[[stratum_label]]) * exp(model_aba$stats[stratum_label, "var_res"] / 2)
         }
       }
-      if (model_aba$stats[stratum_label, "transform"] == "none")
-        # case of case of no transform
-      {
-        variables <- names(model_aba$model[[stratum_label]]$coefficients)
-        variables <- variables[variables != "(Intercept)"]
-        dummy[[stratum_label]] <- raster::predict(metrics_map[[variables]],
-                                                  model_aba$model[[stratum_label]])
-        if (add_error == TRUE) {
-          warning("Error sampling not implemented in the none transformation case")
-        }
-      }
+      if (model_aba$stats[stratum_label, "transform"] == "none" & add_error == TRUE)
+        warning("Error sampling not implemented in the none transformation case")
+      #
       # set prediction outside of strata to NA
-      dummy[[stratum_label]][metrics_map[[stratum]] != stratum_id] <-
-        NA
+      # use temporary variables because "!=" operator not available
+      # for categorical variables
+      # dummy <- metrics_map[[stratum]] == stratum_label
+      r[[stratum_label]][!(metrics_map[[stratum]] == stratum_label)] <- NA
     }
+    # convert list to spatial raster collection
+    r <- terra::sprc(r)
     # merge strata results
-    return(Reduce(function(...)
-      raster::merge(..., tolerance = 1), dummy))
+    r <- terra::merge(r)
+    # convert
+    if(pkg != "terra")
+    {
+      r <- convert_raster(r, pkg = pkg)
+    }
+    return(r)
   }
 
 #-------------------------------------------------------------------------------
-#' Applies thresholds and mask to a rasterLayer object
+#' Applies thresholds and mask to a raster object
 #'
 #' Applies a lower and upper thresholds to the values of the input raster. If the
 #'  mask input is provided, first all NA values in the raster are set to 0, then
 #'   the raster in multiplied by the mask. Cells to be masked should therefore
 #'   have a NA value in the mask raster object.
 #'
-#' @param rast raster object.
+#' @param r raster object. RasterLayer and SpatRaster are supported.
 #' @param minmax vector of two numeric values. minimum and maximum thresholds to
-#' apply to `rast` values
+#' apply to `r` values
 #' @param mask raster object. mask to be applied (multiplication with input raster
-#'  `rast`)
+#'  `r`)
 #' @examples
 #' # load data
 #' data(quatre_montagnes)
 #' # build model
-#' model_aba <- aba_build_model(quatre_montagnes$G_m2_ha,
-#'   quatre_montagnes[, 9:76],
+#' model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
 #'   transform = "boxcox"
 #' )
 #' # build example raster to apply model
 #' quatre_montagnes$X <- rep(1:8, 12)
 #' quatre_montagnes$Y <- rep(1:12, each = 8)
-#' metrics_map <- raster::rasterFromXYZ(quatre_montagnes[, c(2, 3, 9:76)])
+#' metrics_map <- terra::rast(quatre_montagnes[, c(2, 3, 9:76)], type = "xyz")
 #' predict_map <- aba_predict(model_aba, metrics_map)
 #' # create raster mask
 #' mask <- predict_map
 #' # set values to 1 or NA
-#' raster::values(mask) <- rep(c(1, 1, NA), each = 32)
+#' terra::values(mask) <- rep(c(1, 1, NA), each = 32)
 #' # apply thresholds and mask
 #' predict_map_clean <- clean_raster(predict_map, c(40, 70), mask)
 #'
 #' # plot maps
-#' raster::plot(predict_map, main = "Predictions")
-#' raster::plot(mask, main = "Mask", legend = FALSE)
-#' raster::plot(predict_map_clean, main = "Cleaned predictions")
+#' terra::plot(predict_map, main = "Predictions")
+#' terra::plot(mask, main = "Mask", legend = FALSE)
+#' terra::plot(predict_map_clean, main = "Cleaned predictions")
 #' @return a raster object
 #' @export
 #'
 clean_raster <-
-  function(rast,
+  function(r,
            minmax = c(-Inf,+Inf),
            mask = NULL) {
     # if mask is present
     if (!is.null(mask)) {
       # fill NA values in rast with 0
-      rast[is.na(rast)] <- 0
+      r[is.na(r)] <- 0
       # then apply mask
-      rast <- rast * mask
+      r <- r * mask
     }
     #
-    rast[rast <= minmax[1]] <- minmax[1]
-    rast[rast >= minmax[2]] <- minmax[2]
+    r[r <= minmax[1]] <- minmax[1]
+    r[r >= minmax[2]] <- minmax[2]
     #
-    return(rast)
+    return(r)
   }
 
 #-------------------------------------------------------------------------------
@@ -888,8 +888,7 @@ aba_inference <- function(aba_model,
     pixels <- r_predictions * (r_mask >= 0)
     # apply mask also to observations
     coord <- aba_model$values[, c("x", "y")]
-    sp::coordinates(coord) <- ~ x + y
-    observations$mask <- raster::extract(r_mask, coord)
+    observations$mask <- terra::extract(r_mask, coord)
     observations <- observations[!is.na(observations$mask),]
   } else {
     pixels <- r_predictions
@@ -899,7 +898,7 @@ aba_inference <- function(aba_model,
   # number of observations
   n <- nrow(observations)
   # number of predictions (no NA values in raster)
-  N <- sum(!is.na(raster::values(pixels)))
+  N <- sum(!is.na(terra::values(pixels)))
   # number of parameters in the model
   # TAKE MAX NUMBER OF PARAMETERS IN CASE OF STRATIFIED MODELS
   n_para <-
@@ -919,7 +918,7 @@ aba_inference <- function(aba_model,
     dummy_prediction_bias <-
       mean(observations$predicted - observations$field)
     dummy_mean <-
-      mean(raster::values(pixels), na.rm = TRUE) - dummy_prediction_bias
+      mean(terra::values(pixels), na.rm = TRUE) - dummy_prediction_bias
     dummy_var <-
       sum(((observations$predicted - observations$field) -
              dummy_prediction_bias
@@ -937,7 +936,7 @@ aba_inference <- function(aba_model,
   #  at the exact location
   if (is.element("D", type)) {
     observed.pixels <-
-      raster::cellFromXY(pixels, observations[, c("x", "y")])
+      terra::cellFromXY(pixels, observations[, c("x", "y")])
     dummy_prediction_bias <-
       mean(observations$predicted - observations$field)
     dummy_var <-
@@ -947,7 +946,7 @@ aba_inference <- function(aba_model,
     inference[["D"]] <- data.frame(
       mean = (
         sum(observations$field) +
-          sum(raster::values(pixels)[-observed.pixels], na.rm = TRUE)
+          sum(terra::values(pixels)[-observed.pixels], na.rm = TRUE)
       ) /
         N - mean(observations$predicted - observations$field),
       var = dummy_var
@@ -957,11 +956,11 @@ aba_inference <- function(aba_model,
   # Stratified estimator (STR)
   if (is.element("STR", type) & !is.null(r_mask)) {
     # check that there are pixels and observations in all categories
-    if (setequal(stats::na.omit(unique(raster::values(r_mask))),
+    if (setequal(stats::na.omit(unique(terra::values(r_mask))),
                  stats::na.omit(unique(observations$mask)))) {
       dummy <- list()
       # compute weights of each category
-      surface <- table(raster::values(r_mask))
+      surface <- table(terra::values(r_mask))
       surface <- surface / sum(surface)
       # for each category
       for (i in (names(surface)))
@@ -987,7 +986,7 @@ aba_inference <- function(aba_model,
   }
   # synthetic regression estimator (SYNT)
   if (is.element("SYNT", type)) {
-    inference[["SYNT"]] <- data.frame(mean = mean(raster::values(pixels),
+    inference[["SYNT"]] <- data.frame(mean = mean(terra::values(pixels),
                                                   na.rm = TRUE),
                                       var = NA)
   }

@@ -4,14 +4,14 @@
 \alias{rasters_moving_cor}
 \title{Correlation between rasters for different XY translations}
 \usage{
-rasters_moving_cor(raster.b, raster_s, mask = NULL, buffer = 19, step = 0.5)
+rasters_moving_cor(raster_b, raster_s, mask = NULL, buffer = 19, step = 0.5)
 }
 \arguments{
-\item{raster.b}{raster. raster to correlate with largest extent}
+\item{raster_b}{SpatRaster. raster to correlate with largest extent}
 
-\item{raster_s}{raster. raster to correlate with smallest extent}
+\item{raster_s}{SpatRaster. raster to correlate with smallest extent}
 
-\item{mask}{raster. mask of area to correlate, applied to small raster}
+\item{mask}{SpatRaster. mask of area to correlate, applied to small raster}
 
 \item{buffer}{numeric. radius of the circular buffer area for possible 
 translations}
@@ -20,7 +20,7 @@ translations}
 compute correlation values, should be a multiple of raster resolution}
 }
 \value{
-A raster. Raster value at coordinates x,y correspond to the correlation 
+A SpatRaster. Raster value at coordinates x,y correspond to the correlation 
 between the large raster and the small raster when small raster center has 
 been translated of (x,y)
 }
@@ -32,32 +32,31 @@ translation within a buffer area.
 }
 \examples{
 # create raster
-r_b <- raster::raster()
-raster::extent(r_b) <- c(0, 40, 0, 40)
-raster::res(r_b) <- 1
-xy <- raster::xyFromCell(r_b, 1:length(r_b))
+r_b <- terra::rast(xmin = 0, xmax = 40, ymin =0 , ymax = 40,
+resolution = 1, crs = NA)
+xy <- terra::xyFromCell(r_b, 1:(nrow(r_b) * ncol(r_b)))
 
 # add Gaussian surfaces
 z1 <- 1.5 * exp(-((xy[, 1] - 22)^2 + (xy[, 2] - 22)^2 / 2) / 5)
 z2 <- exp(-((xy[, 1] - 20)^2 + (xy[, 2] - 22)^2 / 2) / 3)
 z3 <- 1.5 * exp(-((xy[, 1] - 17)^2 + (xy[, 2] - 17)^2 / 2) / 5)
-r_b <- raster::rasterFromXYZ(cbind(xy, z1 + z2 + z3))
+r_b <- terra::rast(cbind(xy, z1 + z2 + z3), type = "xyz")
 
 # create small raster
-r_s <- raster::crop(r_b, raster::extent(c(15, 25, 15, 25)))
+r_s <- terra::crop(r_b, terra::ext(c(15, 25, 15, 25)))
 # offset raster by (-2, -2)
-raster::extent(r_s) <- c(13, 23, 13, 23)
+terra::ext(r_s) <- c(13, 23, 13, 23)
 
 # compute correlations for translations inside buffer
 rr <- rasters_moving_cor(r_b, r_s, buffer = 6, step = 1)
 rr
 
 # display large raster
-raster::plot(r_b, main = "Large raster")
+terra::plot(r_b, main = "Large raster")
 # display small raster
-raster::plot(r_s, main = "Small raster")
+terra::plot(r_s, main = "Small raster")
 # display correlation
-raster::plot(rr,
+terra::plot(rr,
   xlab = "X translation", ylab = "Y translation",
   main = "Correlation between rasters"
 )

@@ -27,5 +27,11 @@
 #' @examples
 #' data(tree_inventory_chablais3)
 #' summary(tree_inventory_chablais3)
+#' # display tree inventory
+#' plot_tree_inventory(tree_inventory_chablais3[, c("x", "y")],
+#'   diam = tree_inventory_chablais3$d, col = "red",
+#'   pch = tree_inventory_chablais3$e,
+#'   xlab = "X", ylab = "Y"
+#' )
 NULL
 "tree_inventory_chablais3"

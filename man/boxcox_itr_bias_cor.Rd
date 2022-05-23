@@ -7,20 +7,20 @@
 boxcox_itr_bias_cor(x, lambda, varmod)
 }
 \arguments{
-\item{x}{vector or RasterLayer. values to be transformed}
+\item{x}{vector or raster values to be transformed}
 
 \item{lambda}{numeric. parameter of Box-Cox transformation}
 
 \item{varmod}{numeric. model residuals variance}
 }
 \value{
-a vector or RasterLayer
+a vector or raster
 }
 \description{
 Inverse Box-Cox transform with bias correction as suggested by Pu & Tiefelsdorf
 (2015). Here `varmod` is not the local prediction variance as suggested in
 the paper but the model residuals variance. For variance computation,
-use `n-p` instead of `n-1`, with `p` the number of variables in the model.
+uses `n-p` instead of `n-1`, with `p` the number of variables in the model.
 }
 \examples{
 x <- 1:10

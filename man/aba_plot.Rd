@@ -18,7 +18,7 @@ black for single models, depends on stratum in stratified models}
 \item{add_legend}{list. parameters to be passed to \code{\link[graphics]{legend}}. In case of a stratified model, legend is automatically set up.}
 
 \item{...}{other parameters to be passed to \code{\link[graphics]{plot}},
-\code{xlab} and \code{ylab} are automatically setup}
+\code{xlab} and \code{ylab} are automatically added}
 }
 \value{
 nothing
