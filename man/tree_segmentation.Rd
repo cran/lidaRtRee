@@ -102,6 +102,7 @@ Ecosystems, September 14-17, Freiburg, Germany, 9 p.
 }
 \seealso{
 \code{\link{dem_filtering}}, \code{\link{maxima_detection}}, 
-\code{\link{maxima_detection}}, \code{\link{maxima_selection}}, 
-\code{\link{segmentation}}, \code{\link{seg_adjust}}, \code{\link{tree_extraction}}
+\code{\link{maxima_selection}}, \code{\link{segmentation}}, 
+\code{\link{seg_adjust}}, \code{\link{tree_extraction}},
+\code{\link{tree_detection}}
 }

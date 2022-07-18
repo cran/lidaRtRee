@@ -324,7 +324,7 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #' }
 #'
 #' @param llasn list of \code{\link[lidR]{LAS}} objects
-#' @param XY a dataframe or matrix with XY coordinates of plot centers
+#' @param XY a data frame or matrix with XY coordinates of plot centers
 #' @param plot_radius numeric. plot radius in meters
 #' @param res numeric. resolution of canopy height model computed with 
 #' \code{\link{points2DSM}} before tree segmentation
@@ -332,7 +332,7 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #' (return from internal call to \code{\link{tree_extraction}} function) to compute 
 #' plot level metrics
 #' @param ... other parameters to be passed to \code{\link{tree_segmentation}}
-#' @return a dataframe with tree metrics in columns corresponding to LAS objects 
+#' @return a data frame with tree metrics in columns corresponding to LAS objects 
 #' of the list (lines)
 #' @seealso \code{\link{tree_segmentation}}, \code{\link{tree_extraction}}, 
 #' \code{\link{std_tree_metrics}}
@@ -391,7 +391,7 @@ clouds_tree_metrics <- function(llasn, XY, plot_radius, res = 0.5, func, ...) {
     # compute mask of area of interest
     mask <- raster_xy_mask(coord, plot_radius, dummy$local_maxima, binary = TRUE)
     # tree extraction
-    ltrees[[names(llasn)[i]]] <- tree_extraction(dummy$filled_dem, dummy$local_maxima, dummy$segments_id, mask)
+    ltrees[[names(llasn)[i]]] <- tree_extraction(dummy, r_mask = mask)
     # compute tree canopy cover fraction and mean height inside area of interest
     TreeCanopy_cover_in_plot <- sum(terra::values((dummy$segments_id > 0) * mask), na.rm = TRUE) / sum(terra::values(mask))
     mask[mask == 0 | dummy$segments_id == 0] <- NA

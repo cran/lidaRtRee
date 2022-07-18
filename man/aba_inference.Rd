@@ -24,7 +24,7 @@ aba_inference(
 post-stratification categories (should be integer, positive values)}
 }
 \value{
-a dataframe with estimation of parameter value and standard deviation
+a data frame with estimation of parameter value and standard deviation
  of estimation for all required estimators.
 }
 \description{

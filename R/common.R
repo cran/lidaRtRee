@@ -280,8 +280,8 @@ species_color <- function() {
 #'
 #' displays tree inventory data
 #'
-#' @param xy data.frame. contains two columns with the X, Y  coordinates of tree
-#'  centers
+#' @param xy data.frame with X, Y coordinates of tree
+#'  centers in two columns
 #' @param height vector.  tree heights in meters
 #' @param diam vector. tree diameters in centimeters
 #' @param species vector. species abbreviation as in \code{\link{species_color}} 
@@ -313,6 +313,8 @@ species_color <- function() {
 #'
 plot_tree_inventory <- function(xy, height = NULL, diam = NULL, 
                               species = NULL, ...) {
+  # convert to data.frame
+  xy <- as.data.frame(xy)
   # retrieve dots
   dots <- list(...)
   if (!methods::hasArg("add")) dots$add <- FALSE
@@ -563,8 +565,8 @@ ellipses4Crown <- function(x, y, n, s, e, w, id = NULL, step = pi / 12,
 # #' Converts a list of points specifying polygons into a Spatial Polygons DataFrame 
 # #' object
 # #'
-# #' @param points.list list of dataframes of xy coordinates. The first and last 
-# #' coordinates in each dataframe must be the same
+# #' @param points.list list of data frames of xy coordinates. The first and last 
+# #' coordinates in each data frame must be the same
 # #' @param df data.frame. Optional data.frame to be associated to Spatial Polygons
 # #' @param ... arguments to be passed to \code{\link[sp]{SpatialPolygons}}
 # #' @return an object of class \link[sp]{SpatialPolygons-class}, or class 
@@ -667,14 +669,21 @@ pointList2poly <- function(points_list, df = NULL, ...) {
 #' # load SpatRaster
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
+#' # convert only if packages stars and raster are installed
+#' # if (require("stars"))
+#' # {
 #' # to stars
-#' chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
-#' chm_stars
+#' # chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
+#' # chm_stars
+#' # }
+#' if (require("raster"))
+#' {
 #' # to raster
-#' chm_raster <- convert_raster(chm_stars, pkg = "raster")
+#' chm_raster <- convert_raster(chm_chablais3, pkg = "raster")
 #' chm_raster
 #' # back to terra
 #' convert_raster(chm_raster, pkg = "terra")
+#' }
 #' @export
 convert_raster <- function(r, pkg = NULL) {
   # default option corresponds to lidR package 
@@ -707,7 +716,7 @@ convert_raster <- function(r, pkg = NULL) {
   if (pkg == "raster")
   {
     if (inherits(r, "stars"))
-      {
+    {
       r <- terra::rast(r)
     }
     r <- raster::raster(r)

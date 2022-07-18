@@ -1,12 +1,18 @@
 Package: lidaRtRee
 Type: Package
-Version: 4.0.1
+Version: 4.0.2
 Title: Forest Analysis with Airborne Laser Scanning (LiDAR) Data
-Date: 2022-05-23
+Date: 2022-07-18
 Authors@R: c(
     person("Jean-Matthieu", "Monnet", email = "jean-matthieu.monnet@inrae.fr", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9948-9891")),
     person("Pascal", "Obstétar", email = "pascal.obstetar@onf.fr", role = c("ctb"), comment = c(ORCID = "0000-0002-2811-7548")))
-Description: Provides functions for forest analysis using airborne laser scanning (LiDAR remote sensing) data: tree detection (method 1 in Eysn et al. (2015) <doi:10.3390/f6051721>) and segmentation; forest parameters estimation and mapping with the area-based approach. It includes complementary steps for forest mapping: co-registration of field plots with LiDAR data (Monnet and Mermin (2014) <doi:10.3390/f5092307>); extraction of both physical (gaps, edges, trees) and statistical features from LiDAR data useful for e.g. habitat suitability modeling (Glad et al. (2020) <doi:10.1002/rse2.117>); model calibration with ground reference, and maps export. 
+Description: Provides functions for forest analysis using airborne laser scanning (LiDAR remote sensing) data: 
+    tree detection (method 1 in Eysn et al. (2015) <doi:10.3390/f6051721>) and segmentation; 
+    forest parameters estimation and mapping with the area-based approach. It includes complementary steps for forest mapping: 
+    co-registration of field plots with LiDAR data (Monnet and Mermin (2014) <doi:10.3390/f5092307>); 
+    extraction of both physical (gaps, edges, trees) and statistical features from LiDAR data useful 
+    for e.g. habitat suitability modeling (Glad et al. (2020) <doi:10.1002/rse2.117>) and forest maturity mapping (Fuhr et al. (2022) <doi:10.1002/rse2.274>); 
+    model calibration with ground reference, and maps export. 
 URL: https://gitlab.irstea.fr/jean-matthieu.monnet/lidaRtRee
 BugReports: https://gitlab.irstea.fr/jean-matthieu.monnet/lidaRtRee/-/issues
 Depends: R (>= 4.0.0)
@@ -18,10 +24,10 @@ LazyData: TRUE
 RoxygenNote: 7.2.0
 Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2022-05-23 15:46:38 UTC; jean-matthieu_monnet
+Packaged: 2022-07-18 12:33:00 UTC; jean-matthieu_monnet
 Author: Jean-Matthieu Monnet [aut, cre]
     (<https://orcid.org/0000-0002-9948-9891>),
   Pascal Obstétar [ctb] (<https://orcid.org/0000-0002-2811-7548>)
 Maintainer: Jean-Matthieu Monnet <jean-matthieu.monnet@inrae.fr>
 Repository: CRAN
-Date/Publication: 2022-05-23 18:20:09 UTC
+Date/Publication: 2022-07-18 13:10:06 UTC

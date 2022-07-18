@@ -7,7 +7,7 @@
 #' ##############################
 #' #' segment-wise computation of point metrics
 #' #'
-#' #' @param p A dataframe with point attributes, including the segment ID field
+#' #' @param p A data frame with point attributes, including the segment ID field
 #' #' @param columnId A string: name of the field containing the segment ID
 #' #' @param FUN Function to compute for each segment ID. Default: number of points
 #' #' @return A vector of values obtainted by applying the function to the point cloud in each segment
@@ -20,7 +20,7 @@
 #' #' replace values in a raster based on segment ID and tree attributes
 #' #'
 #' #' @param r.dem.w a raster with segment ID, integers starting from 0 to max(r.dem.w)
-#' #' @param segms A dataframe with tree attributes
+#' #' @param segms A data frame with tree attributes
 #' #' @param attr the attribute to use for rast
 #' #' @return a raster
 #' #' @export

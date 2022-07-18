@@ -9,7 +9,7 @@ clouds_tree_metrics(llasn, XY, plot_radius, res = 0.5, func, ...)
 \arguments{
 \item{llasn}{list of \code{\link[lidR]{LAS}} objects}
 
-\item{XY}{a dataframe or matrix with XY coordinates of plot centers}
+\item{XY}{a data frame or matrix with XY coordinates of plot centers}
 
 \item{plot_radius}{numeric. plot radius in meters}
 
@@ -23,7 +23,7 @@ plot level metrics}
 \item{...}{other parameters to be passed to \code{\link{tree_segmentation}}}
 }
 \value{
-a dataframe with tree metrics in columns corresponding to LAS objects 
+a data frame with tree metrics in columns corresponding to LAS objects 
 of the list (lines)
 }
 \description{

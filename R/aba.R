@@ -871,7 +871,7 @@ clean_raster <-
 #' (one or several in "SRS", "ED", "D", "STR", "SYNT")
 #' @param r_mask raster to mask region of interest (NA values), may contain
 #' post-stratification categories (should be integer, positive values)
-#' @return a dataframe with estimation of parameter value and standard deviation
+#' @return a data frame with estimation of parameter value and standard deviation
 #'  of estimation for all required estimators.
 #' @export
 #'

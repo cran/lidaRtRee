@@ -23,12 +23,19 @@ or stars format. Default is getOption("lidR.raster.default").
 # load SpatRaster
 data(chm_chablais3)
 chm_chablais3 <- terra::rast(chm_chablais3)
+# convert only if packages stars and raster are installed
+# if (require("stars"))
+# {
 # to stars
-chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
-chm_stars
+# chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
+# chm_stars
+# }
+if (require("raster"))
+{
 # to raster
-chm_raster <- convert_raster(chm_stars, pkg = "raster")
+chm_raster <- convert_raster(chm_chablais3, pkg = "raster")
 chm_raster
 # back to terra
 convert_raster(chm_raster, pkg = "terra")
+}
 }

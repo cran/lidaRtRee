@@ -7,8 +7,8 @@
 plot_tree_inventory(xy, height = NULL, diam = NULL, species = NULL, ...)
 }
 \arguments{
-\item{xy}{data.frame. contains two columns with the X, Y  coordinates of tree
-centers}
+\item{xy}{data.frame with X, Y coordinates of tree
+centers in two columns}
 
 \item{height}{vector.  tree heights in meters}
 

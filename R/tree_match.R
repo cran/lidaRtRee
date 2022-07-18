@@ -45,6 +45,9 @@
 #' plot_matched(ref_trees, def_trees, match2, xlab = "X", ylab = "Y")
 #' @export
 tree_matching <- function(lr, ld, delta_ground = 2.1, h_prec = 0.14, stat = TRUE) {
+  # convert to data.frame
+  lr <- as.data.frame(lr)
+  ld <- as.data.frame(ld)
   # coefficients for max matching squared radius ( rmax = delta_ground + h_prec * HEIGHT -> rmax^2 = delta_ground^2 + 2* h_prec * delta_ground * HEIGHT + h_prec^2 * HEIGHT^2)
   d2max0 <- delta_ground^2
   d2max1 <- 2 * h_prec * delta_ground
@@ -196,6 +199,10 @@ plot_matched <- function(lr, ld, matched, chm = NULL, plot_border = NULL, ...) {
 #' hist_detection(ref_trees, def_trees, match2)
 #' @export
 hist_detection <- function(lr, ld, matched, plot = TRUE) {
+  # convert to data.frame
+  lr <- as.data.frame(lr)
+  ld <- as.data.frame(ld)
+  # create output list
   dummy <- list()
   # true detections
   dummy[[1]] <- lr[matched[, 1], 3]
@@ -294,6 +301,9 @@ hist_stack <- function(x, breaks, col = NULL, breaksFun = paste, ...) {
 #' @export
 #'
 height_regression <- function(lr, ld, matched, plot = TRUE, species = NULL, ...) {
+  # convert to data.frame
+  lr <- as.data.frame(lr)
+  ld <- as.data.frame(ld)
   # build data.frame with pairs
   app <- data.frame(Hm = lr[matched[, 1], 3], Hl = ld[matched[, 2], 3])
   # fit regression

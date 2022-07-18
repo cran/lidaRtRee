@@ -5,9 +5,12 @@
 #-------------------------------------------------------------------------------
 #' Gap detection in a Canopy Height Model
 #'
-#' Performs gaps detection in a canopy height model. Function
-#' \code{\link{dem_filtering}} is first applied to the canopy height model to
-#' remove artefacts. Gaps are then extracted based on several criteria:
+#' Performs gaps detection on a canopy height model provided as object  of class 
+#' \code{\link[terra]{SpatRaster-class}}, or computed from the point cloud of 
+#' objects of class \code{\link[lidR]{LAS-class}} or 
+#' \code{\link[lidR]{LAScatalog-class}}. Function \code{\link{dem_filtering}} 
+#' is first applied to the canopy height model to remove artefacts. 
+#' Gaps are then extracted based on several criteria:
 #' \enumerate{
 #' \item Vegetation height must be smaller than a threshold
 #' \item Gap width must be large enough, depending on surrounding canopy height;
@@ -15,8 +18,11 @@
 #' \item Gap must have a minimum surface
 #' }
 #'
-#'
-#' @param chm raster object. canopy height model
+#' @param las An object of class \code{\link[terra]{SpatRaster-class}},
+#' \code{\link[lidR]{LAS-class}} or \code{\link[lidR]{LAScatalog-class}}
+#' @param res numeric. The size of a grid cell in point cloud coordinates units,
+#' used to rasterize the point cloud. In case the \code{las} argument is a 
+#' \code{SpatRaster} \code{res} is not used.
 #' @param ratio numeric. maximum ratio between surrounding canopy height and gap
 #' distance (a pixel belongs to the gap only if for any vegetation pixel around
 #' it, the distance to the vegetation pixel is larger than pixel height/ratio).
@@ -69,86 +75,157 @@
 #' # plot filtered CHM
 #' terra::plot(gaps2$filled_chm, main = "Filtered CHM")
 #' @seealso \code{\link{dem_filtering}}, \code{\link{edge_detection}}
-#' @return A list of three SpatRaster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
+#' @return A \code{SpatRaster} object with three layers: gap labels, gap surface 
+#' and canopy height model after filter.
 #' @export
-gap_detection <- function(chm, ratio = 2, gap_max_height = 1, min_gap_surface = 25, 
-                          max_gap_surface = +Inf, closing_height_bin = 1, 
-                          nl_filter = "Median", nl_size = 3, gap_reconstruct = FALSE) {
-  # convert to SpatRaster
-  if(!inherits(chm, "SpatRaster")) chm <- convert_raster(chm)
-  # convert to cimg object
-  c_chm <- raster2Cimg(chm)
-  # apply non linear filter to chm
-  c_chm <- dem_filtering(c_chm, nl_filter, nl_size)[[1]]
-  # convert to raster for export
-  r.nl <- cimg2Raster(c_chm, chm)
-  #
-  # check gap width
-  if (is.null(ratio)) {
-    l_im <- list(imager::as.cimg(c_chm > gap_max_height))
-  } else {
-    l_im <- list()
-    # loop on dilate size -> canopy height (threshold at 50 m in case of outliers)
-    for (i in seq(from = gap_max_height, 
-                  to = max(gap_max_height, min(max(c_chm), 50)), 
-                  by = closing_height_bin))
-    {
-      # create binary image to close (areas where chm> i)
-      dummy <- imager::as.cimg(c_chm > i)
-      # create stucturing element (uneven disk of radius i/2)
-      strel <- imager::as.cimg(create_disk(floor(i / ratio / terra::xres(chm) / 2) * 2 + 1))
-      # perform morphological closing and store in list
-      l_im[[as.character(i)]] <- imager::mclosing(dummy, strel)
-    }
-  }
-  #
-  # union of closed images -> non gap areas
-  final <- imager::parmax(l_im)
-  # compute gap areas not closed
-  gaps <- abs(final - 1)
-  if (gap_reconstruct) {
-    # extend non closed gaps into connected pixels where h < gap_max_height
-    # map of pixels which comply with the height criterion (gap candidates)
-    gaps_candidate <- c_chm < gap_max_height
-    # label all gap candidates
-    labels <- (imager::label(gaps_candidate) + 1) * gaps_candidate
-    # list of labels of gaps not closed when applying the distance ratio
-    not_closed_labels <- setdiff(unique(labels * gaps), 0)
-    # remove closed labels
-    gaps <- cimg2Raster(labels, chm)
-    terra::values(gaps)[!is.element(terra::values(gaps), not_closed_labels)] <- 0
-    gaps <- raster2Cimg(gaps > 0)
-  }
-  #
-  # label unconnected gaps
-  labels <- (imager::label(gaps) + 1) * gaps
-  # extract gap surface
-  gap_surface <- table(as.vector(labels)) * (terra::xres(chm))^2
-  gap_surface <- as.data.frame(gap_surface)
-  # remove non-gap category (0), except if only one gap
-  if (nrow(gap_surface) > 1) {
-    gap_surface <- gap_surface[-1, ]
-  }
-  #
-  # convert gap label to raster object
-  r_labels <- cimg2Raster(labels, chm)
-  # set label of non gaps to NA
-  r_labels[r_labels == 0] <- NA
-  # create map where pixel value is gap size
-  r_surface <- r_labels
-  terra::values(r_surface) <- NA
-  # PROBABLY A BETTER WAY TO DO IT THAN IN A LOOP
-  for (i in 1:nrow(gap_surface))
+#' 
+gap_detection <-
+  function(las,
+           res = 1, 
+           ratio = 2,
+           gap_max_height = 1,
+           min_gap_surface = 25,
+           max_gap_surface = +Inf,
+           closing_height_bin = 1,
+           nl_filter = "Median",
+           nl_size = 3,
+           gap_reconstruct = FALSE)
   {
-    r_surface[r_labels == as.numeric(as.character(gap_surface$Var1[i]))] <- gap_surface$Freq[i]
+    # if catalog
+    if (lidR::is(las, "LAScatalog")) {
+      # automerge
+      options <- list(automerge = TRUE)
+      #
+      # check buffer size
+      if (lidR::opt_chunk_buffer(las) < 10)
+        warning("For gap detection a buffer larger than 20 m is recommended to avoid border effects")
+      # apply function to catalog
+      output <- lidR::catalog_apply(
+        las,
+        gap_detection,
+        res = res, 
+        ratio = ratio,
+        gap_max_height = gap_max_height,
+        min_gap_surface = min_gap_surface,
+        max_gap_surface = max_gap_surface,
+        closing_height_bin = closing_height_bin,
+        nl_filter = nl_filter,
+        nl_size = nl_size,
+        gap_reconstruct = gap_reconstruct,
+        .options = options
+      )
+      return(output)
+      #
+    } else if (lidR::is(las, "LAScluster")) {
+      #
+      x <- lidR::readLAS(las)
+      if (lidR::is.empty(x))
+        return(NULL)
+      #
+      output <- gap_detection(
+        x,
+        res = res, 
+        ratio = ratio,
+        gap_max_height = gap_max_height,
+        min_gap_surface = min_gap_surface,
+        max_gap_surface = max_gap_surface,
+        closing_height_bin = closing_height_bin,
+        nl_filter = nl_filter,
+        nl_size = nl_size,
+        gap_reconstruct = gap_reconstruct
+      )
+      if (is.null(output)) return(NULL)
+      # crop to chunk bounding box
+      output <- terra::crop(output, terra::ext(las))
+      return(output)
+      #
+    } else if (lidR::is(las, "LAS")) {
+      # compute chm from points
+      las <-
+        lidR::rasterize_canopy(las, res = res, algorithm = lidR::p2r())
+    }
+    # convert to SpatRaster
+    if (!inherits(las, "SpatRaster"))
+    {
+      chm <- convert_raster(las)
+    } else {
+      chm <- las
+    }
+    # convert to cimg object
+    c_chm <- raster2Cimg(chm)
+    # apply non linear filter to chm
+    c_chm <- dem_filtering(c_chm, nl_filter = nl_filter, nl_size = nl_size)[[1]]
+    # convert to raster for export
+    r.nl <- cimg2Raster(c_chm, chm)
+    #
+    # check gap width
+    if (is.null(ratio)) {
+      l_im <- list(imager::as.cimg(c_chm > gap_max_height))
+    } else {
+      l_im <- list()
+      # loop on dilate size -> canopy height (threshold at 60 m in case of outliers)
+      for (i in seq(from = gap_max_height, 
+                    to = max(gap_max_height, min(max(c_chm), 60)), 
+                    by = closing_height_bin))
+      {
+        # create binary image to close (areas where chm> i)
+        dummy <- imager::as.cimg(c_chm > i)
+        # create stucturing element (uneven disk of radius i/2)
+        strel <- imager::as.cimg(create_disk(floor(i / ratio / terra::xres(chm) / 2) * 2 + 1))
+        # perform morphological closing and store in list
+        l_im[[as.character(i)]] <- imager::mclosing(dummy, strel)
+      }
+    }
+    #
+    # union of closed images -> non gap areas
+    final <- imager::parmax(l_im)
+    # compute gap areas not closed
+    gaps <- abs(final - 1)
+    if (gap_reconstruct) {
+      # extend non closed gaps into connected pixels where h < gap_max_height
+      # map of pixels which comply with the height criterion (gap candidates)
+      gaps_candidate <- c_chm < gap_max_height
+      # label all gap candidates
+      labels <- (imager::label(gaps_candidate) + 1) * gaps_candidate
+      # list of labels of gaps not closed when applying the distance ratio
+      not_closed_labels <- setdiff(unique(labels * gaps), 0)
+      # remove closed labels
+      gaps <- cimg2Raster(labels, chm)
+      terra::values(gaps)[!is.element(terra::values(gaps), not_closed_labels)] <- 0
+      gaps <- raster2Cimg(gaps > 0)
+    }
+    #
+    # label unconnected gaps
+    labels <- (imager::label(gaps) + 1) * gaps
+    # extract gap surface
+    gap_surface <- table(as.vector(labels)) * (terra::xres(chm))^2
+    gap_surface <- as.data.frame(gap_surface)
+    # remove non-gap category (0), except if only one gap
+    if (nrow(gap_surface) > 1) {
+      gap_surface <- gap_surface[-1, ]
+    }
+    #
+    # convert gap label to raster object
+    r_labels <- cimg2Raster(labels, chm)
+    # set label of non gaps to NA
+    r_labels[r_labels == 0] <- NA
+    # create map where pixel value is gap size
+    r_surface <- r_labels
+    terra::values(r_surface) <- NA
+    # PROBABLY A BETTER WAY TO DO IT THAN IN A LOOP
+    for (i in 1:nrow(gap_surface))
+    {
+      r_surface[r_labels == as.numeric(as.character(gap_surface$Var1[i]))] <- gap_surface$Freq[i]
+    }
+    # set surface of non gaps to NA
+    r_surface[is.na(r_labels)] <- NA
+    # removal of labels with small surface
+    dummy <- (r_surface < min_gap_surface) | (r_surface > max_gap_surface)
+    r_labels[dummy] <- r_surface[dummy] <- NA
+    output <- c(r_labels, r_surface, r.nl)
+    names(output) <- c("gap_id", "gap_surface", "filled_chm")
+    return(output)
   }
-  # set surface of non gaps to NA
-  r_surface[is.na(r_labels)] <- NA
-  # removal of labels with small surface
-  dummy <- (r_surface < min_gap_surface) | (r_surface > max_gap_surface)
-  r_labels[dummy] <- r_surface[dummy] <- NA
-  list(gap_id = r_labels, gap_surface = r_surface, filled_chm = r.nl)
-}
 
 #-------------------------------------------------------------------------------
 #' Edge detection in gap image

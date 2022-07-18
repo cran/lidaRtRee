@@ -5,7 +5,8 @@
 \title{Gap detection in a Canopy Height Model}
 \usage{
 gap_detection(
-  chm,
+  las,
+  res = 1,
   ratio = 2,
   gap_max_height = 1,
   min_gap_surface = 25,
@@ -17,7 +18,12 @@ gap_detection(
 )
 }
 \arguments{
-\item{chm}{raster object. canopy height model}
+\item{las}{An object of class \code{\link[terra]{SpatRaster-class}},
+\code{\link[lidR]{LAS-class}} or \code{\link[lidR]{LAScatalog-class}}}
+
+\item{res}{numeric. The size of a grid cell in point cloud coordinates units,
+used to rasterize the point cloud. In case the \code{las} argument is a 
+\code{SpatRaster} \code{res} is not used.}
 
 \item{ratio}{numeric. maximum ratio between surrounding canopy height and gap
 distance (a pixel belongs to the gap only if for any vegetation pixel around
@@ -44,12 +50,16 @@ some pixels of a gap fulfill the distance criterion, the connected pixels that
 fulfill the height criterion are also integrated to it.}
 }
 \value{
-A list of three SpatRaster objects: raster with gap labels, raster with gap surface, canopy height model after filter.
+A \code{SpatRaster} object with three layers: gap labels, gap surface 
+and canopy height model after filter.
 }
 \description{
-Performs gaps detection in a canopy height model. Function
-\code{\link{dem_filtering}} is first applied to the canopy height model to
-remove artefacts. Gaps are then extracted based on several criteria:
+Performs gaps detection on a canopy height model provided as object  of class 
+\code{\link[terra]{SpatRaster-class}}, or computed from the point cloud of 
+objects of class \code{\link[lidR]{LAS-class}} or 
+\code{\link[lidR]{LAScatalog-class}}. Function \code{\link{dem_filtering}} 
+is first applied to the canopy height model to remove artefacts. 
+Gaps are then extracted based on several criteria:
 \enumerate{
 \item Vegetation height must be smaller than a threshold
 \item Gap width must be large enough, depending on surrounding canopy height;
