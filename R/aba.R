@@ -737,8 +737,12 @@ aba_predict <-
     }
     #
     r <- list()
+    # retrieve levels (terra <= 1.5-34)
+    levs <- terra::levels(metrics_map[[stratum]])[[1]]
+    # to comply with terra >= 1.6.2 (suggestion by Robert J. Hijmans)
+    if (inherits(levs, "data.frame")) levs <- levs[,2]
     # loop on strata
-    for (stratum_label in terra::levels(metrics_map[[stratum]])[[1]])
+    for (stratum_label in levs)
     {
       variables <-
         names(model_aba$model[[stratum_label]]$coefficients)

@@ -1,6 +1,6 @@
-3505b8849907e1a6838d8ad26dd845ee *DESCRIPTION
+de813da2e202e3cad43b0c5f51296eb7 *DESCRIPTION
 09a001a4b8aa09acb550b681040f1561 *NAMESPACE
-8ef9ea8885ebd4d8bf7db5e33503ecae *R/aba.R
+23bdb52f552f6c4c3f641a9df3cd7e92 *R/aba.R
 602a140f0acb2f22652a27c11f51cdf6 *R/chm_chablais3-data.R
 b7f999c8b8af3a15f5a1538da89c1524 *R/common.R
 c935d57c167771f2ba138924271d06d4 *R/coregistration.R
@@ -10,7 +10,7 @@ c935d57c167771f2ba138924271d06d4 *R/coregistration.R
 2aa0f971593dfe3d506b5644b330169f *R/optical_metrics.R
 e8c86dfeea1894ab63737f04b6bbcd8d *R/quatre_montagnes-data.R
 5783675a89baeb47c95280c17534a47f *R/raster_metrics.R
-07b1d5137ce5e511600314c780fa2f50 *R/tree_detection.R
+b4fc75a3e3a0f6511fec030d09d8a436 *R/tree_detection.R
 6dcf247a05f5c85ae2aa239c6e4ea42b *R/tree_inventory_chablais3-data.R
 973f91da9e8b25d17429deb62c285f6d *R/tree_match.R
 28717d9c51b4dfa0000a8121d2b1488d *R/tree_metrics.R
@@ -71,7 +71,7 @@ efe58ca921be87d4e185b51debc0637a *man/species_color.Rd
 7e69481613bcee039cb88dcd944b3a9d *man/std_tree_metrics.Rd
 0ff8fa4141ed4188a883ffc7402f558d *man/terrain_points_metrics.Rd
 9ff1e4753ebf5b385dc1064ffda9eac8 *man/tree_detection.Rd
-0e60e4f0b571cd7bb4a69135eb18ca4c *man/tree_extraction.Rd
+723e361244aab369052a890534ab0234 *man/tree_extraction.Rd
 37660ef0caba354b2ecb81ae297ad22e *man/tree_inventory_chablais3.Rd
 8648270b307d62ea49ed99d2c2edce27 *man/tree_matching.Rd
 85dca9e3738b7af0f26951f53d4b6153 *man/tree_segmentation.Rd

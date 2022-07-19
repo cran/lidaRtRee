@@ -1,8 +1,8 @@
 Package: lidaRtRee
 Type: Package
-Version: 4.0.2
+Version: 4.0.3
 Title: Forest Analysis with Airborne Laser Scanning (LiDAR) Data
-Date: 2022-07-18
+Date: 2022-07-19
 Authors@R: c(
     person("Jean-Matthieu", "Monnet", email = "jean-matthieu.monnet@inrae.fr", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9948-9891")),
     person("Pascal", "Obstétar", email = "pascal.obstetar@onf.fr", role = c("ctb"), comment = c(ORCID = "0000-0002-2811-7548")))
@@ -21,13 +21,13 @@ Imports: graphics, stats, methods, grDevices, terra, sf, imager, leaps,
 Suggests: stars, raster
 License: GPL-3
 LazyData: TRUE
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2022-07-18 12:33:00 UTC; jean-matthieu_monnet
+Packaged: 2022-07-19 12:29:22 UTC; jean-matthieu_monnet
 Author: Jean-Matthieu Monnet [aut, cre]
     (<https://orcid.org/0000-0002-9948-9891>),
   Pascal Obstétar [ctb] (<https://orcid.org/0000-0002-2811-7548>)
 Maintainer: Jean-Matthieu Monnet <jean-matthieu.monnet@inrae.fr>
 Repository: CRAN
-Date/Publication: 2022-07-18 13:10:06 UTC
+Date/Publication: 2022-07-19 13:00:01 UTC

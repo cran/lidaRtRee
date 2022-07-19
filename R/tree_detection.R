@@ -910,10 +910,12 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
 #' @param r_mask SpatRaster object. only segments which maxima are inside the mask are extracted. Values should be NA outside the mask, 1 inside.
 #' @param crown boolean. Should the 2D crown geometry be added in wkt format 
 #' to the output data.frame ?
-#' @return A sf collection of POINTs with 7 fields: tree id, local maximum stats
+#' @return A \code{sf} collection of POINTs with 7 fields: tree id, local maximum stats
 #'  (height, dominance radius), segment stats (surface and volume), coordinates 
 #'  (x and y). In case argument `crown` is `TRUE`, a `crown` field 
-#'  containing the WKT geometry of the 2D crown is also present.
+#'  containing the WKT geometry of the 2D crown is also present. Coordinates are 
+#'  written with one decimal to the right of the order of magnitude of 
+#'  the SpatRaster resolution (e.g. if resolution is 1/3 then 2 decimals are written).
 #' @examples
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
@@ -930,10 +932,15 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
 #' summary(trees[, -which(names(trees) == "crown")])
 #'
 #' # plot initial image
-#' terra::plot(chm_chablais3)
+#' terra::plot(chm_chablais3, main = "CHM and extracted trees")
 #'
 #' # add treetop positions
 #' plot(trees["h"], add = TRUE, cex = trees$h/20, col = "black")
+#' # add crowns
+#' plot(sf::st_geometry(trees_crowns), add = TRUE, border = "black", col = NA)
+#' 
+#' # plot segments
+#' terra::plot(segments$segments_id, main = "Segments")
 #' # add crowns
 #' plot(sf::st_geometry(trees_crowns), add = TRUE, border = "black", col = NA)
 #'
@@ -951,7 +958,7 @@ tree_extraction <- function(r_dem_nl, r_maxi = NULL, r_dem_w = NULL, r_mask = NU
     } else { # check that other rasters are provided if first one is not multi-layer
       if(is.null(r_maxi) & is.null(r_dem_w))
       {
-        warning("Arguments r_maxi and r_dem_w should be provided if r_dem_nl is not multi-layer")
+        warning("Arguments r_maxi and r_dem_w should be provided if r_dem_nl is not multi-layered")
         return(NULL)
       }
     }
@@ -984,45 +991,47 @@ tree_extraction <- function(r_dem_nl, r_maxi = NULL, r_dem_w = NULL, r_mask = NU
   # extract segment id, height and dom_radius
   cells <- which(terra::values(r_maxi) > 0)
   # check if positive values are present
-  if (length(cells) == 0) {
-    segms <- NULL
-  } else {
-    # extract coordinates
-    coord <- terra::xyFromCell(r_maxi, cells)
-    # create data.frame
-    segms <- data.frame(coord, id = terra::values(r_dem_w)[cells], 
-                        h = terra::values(r_dem_nl)[cells], 
-                        dom_radius = terra::values(r_maxi)[cells])
-    # add surface and volume
-    segms <- merge(segms, s, all.x = TRUE)
-    segms <- merge(segms, v, all.x = TRUE)
-    # add surface and volume in plot if mask present
-    if (!is.null(r_mask)) {
-      segms <- merge(segms, sp, all.x = TRUE)
-      segms <- merge(segms, vp, all.x = TRUE)
-    }
-    # duplicate coordinates 
-    segms$X <- segms$x
-    segms$Y <- segms$y
-    # convert to sf
-    segms <- sf::st_as_sf(segms, coords = c("X", "Y"),
-                          crs = terra::crs(r_dem_nl))
-    # if output crowns
-    if(crown)
-    {
-      vecteur <- terra::as.polygons(r_dem_w)
-      # convert to sf
-      vecteur <- sf::st_as_sf(vecteur)
-      # extract geom to attribute
-      vecteur$crown <- sf::st_as_text(sf::st_geometry(vecteur))
-      # rename first attribute for merging
-      names(vecteur)[1] <- "id"
-      # add polygon geometry attribute to output
-      segms <-
-        merge(segms, sf::st_drop_geometry(vecteur), all.x = TRUE)
-    }
+  if (length(cells) == 0) return(NULL)
+  #
+  # extract coordinates
+  coord <- terra::xyFromCell(r_maxi, cells)
+  # create data.frame
+  trees <- data.frame(coord, id = terra::values(r_dem_w)[cells], 
+                      h = terra::values(r_dem_nl)[cells], 
+                      dom_radius = terra::values(r_maxi)[cells])
+  # add surface and volume
+  trees <- merge(trees, s, all.x = TRUE)
+  trees <- merge(trees, v, all.x = TRUE)
+  # add surface and volume in plot if mask present
+  if (!is.null(r_mask)) {
+    trees <- merge(trees, sp, all.x = TRUE)
+    trees <- merge(trees, vp, all.x = TRUE)
   }
-  segms
+  # duplicate coordinates 
+  trees$X <- trees$x
+  trees$Y <- trees$y
+  # convert to sf
+  trees <- sf::st_as_sf(trees, coords = c("X", "Y"),
+                        crs = terra::crs(r_dem_nl))
+  # if output crowns
+  if(crown)
+  {
+    vecteur <- terra::as.polygons(r_dem_w)
+    # convert to sf
+    vecteur <- sf::st_as_sf(vecteur)
+    # compute number of digits to write (left of .)
+    n1 <- ceiling(log(max(abs(sf::st_bbox(vecteur))))/log(10))
+    # compute number of digits to write (right of .)
+    n2 <- abs(min(floor(log((min(terra::res(r_dem_w))/10))/log(10)), 0))
+    # extract geom to attribute
+    vecteur$crown <- sf::st_as_text(sf::st_geometry(vecteur), digits = n1 + n2)
+    # rename first attribute for merging
+    names(vecteur)[1] <- "id"
+    # add polygon geometry attribute to output
+    trees <-
+      merge(trees, sf::st_drop_geometry(vecteur), all.x = TRUE)
+  }
+  trees
 }
 
 #-------------------------------------------------------------------------------

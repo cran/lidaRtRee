@@ -27,10 +27,12 @@ have to be provided}
 to the output data.frame ?}
 }
 \value{
-A sf collection of POINTs with 7 fields: tree id, local maximum stats
+A \code{sf} collection of POINTs with 7 fields: tree id, local maximum stats
  (height, dominance radius), segment stats (surface and volume), coordinates 
  (x and y). In case argument `crown` is `TRUE`, a `crown` field 
- containing the WKT geometry of the 2D crown is also present.
+ containing the WKT geometry of the 2D crown is also present. Coordinates are 
+ written with one decimal to the right of the order of magnitude of 
+ the SpatRaster resolution (e.g. if resolution is 1/3 then 2 decimals are written).
 }
 \description{
 creates a data.frame with segment id, height and coordinates of maxima, surface and volume, computed from three images: 
@@ -53,10 +55,15 @@ trees_crowns <- sf::st_as_sf(sf::st_drop_geometry(trees), wkt = "crown")
 summary(trees[, -which(names(trees) == "crown")])
 
 # plot initial image
-terra::plot(chm_chablais3)
+terra::plot(chm_chablais3, main = "CHM and extracted trees")
 
 # add treetop positions
 plot(trees["h"], add = TRUE, cex = trees$h/20, col = "black")
+# add crowns
+plot(sf::st_geometry(trees_crowns), add = TRUE, border = "black", col = NA)
+
+# plot segments
+terra::plot(segments$segments_id, main = "Segments")
 # add crowns
 plot(sf::st_geometry(trees_crowns), add = TRUE, border = "black", col = NA)
 
