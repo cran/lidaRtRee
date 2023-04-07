@@ -22,7 +22,7 @@
 #'
 #' @keywords datasets
 #'
-#' @references Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22 & 34 \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+#' @references Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22 & 34 \url{https://theses.hal.science/tel-00652698/document}
 #'
 #' @examples
 #' data(tree_inventory_chablais3)

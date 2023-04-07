@@ -8,8 +8,9 @@ dem_filtering(
   dem,
   nl_filter = "Closing",
   nl_size = 5,
-  sigmap = 0.3,
-  padding = TRUE
+  sigma = 0.3,
+  padding = TRUE,
+  sigmap = NULL
 )
 }
 \arguments{
@@ -19,11 +20,12 @@ SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})}
 \item{nl_filter}{string. type of non-linear filter to apply: "None", "Closing" 
 or "Median"}
 
-\item{nl_size}{numeric. kernel width in pixel for non-linear filtering}
+\item{nl_size}{numeric. kernel width in pixels for non-linear filtering}
 
-\item{sigmap}{numeric or matrix. if a single number is provided, sigmap is 
-the standard deviation of the Gaussian filter in pixel, 0 corresponds to no 
-smoothing. In case of matrix, the first column corresponds to the standard 
+\item{sigma}{numeric or matrix. If a single number is provided, \code{sigma} is 
+the standard deviation of the Gaussian filter, 0 corresponds to no 
+smoothing. Unit is pixel in case \code{dem} is a cimg object, SpatRaster units 
+otherwise. In case of a matrix, the first column corresponds to the standard 
 deviation of the filter, and the second to thresholds for image values (e.g. 
 a filter of standard deviation specified in line \code{i} is applied to pixels 
 in image which values are between thresholds indicated in lines \code{i} and 
@@ -31,6 +33,10 @@ in image which values are between thresholds indicated in lines \code{i} and
 
 \item{padding}{boolean. Whether image should be padded by duplicating edge 
 values before filtering to avoid border effects}
+
+\item{sigmap}{deprecated (numeric or matrix). (old name for \code{sigma} parameter, 
+retained for backward compatibility, overwrites \code{sigma} if provided, unit is 
+pixel whatever the class of \code{dem})}
 }
 \value{
 A list of two cimg objects or a SpatRaster object with image after non-linear 
@@ -50,13 +56,13 @@ data(chm_chablais3)
 chm_chablais3 <- terra::rast(chm_chablais3)
 
 # filtering with median and Gaussian smoothing
-im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigmap = 0.8)
+im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigma = 0.8)
 
 # filtering with median filter and value-dependent Gaussian smoothing
 # (less smoothing for values between 0 and 15)
 im2 <- dem_filtering(chm_chablais3,
   nl_filter = "Median", nl_size = 3,
-  sigmap = cbind(c(0.2, 0.8), c(0, 15))
+  sigma = cbind(c(0.2, 0.8), c(0, 15))
 )
 
 # plot original image

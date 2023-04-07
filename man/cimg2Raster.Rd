@@ -28,7 +28,7 @@ chm_cim <- raster2Cimg(chm_chablais3)
 chm_cim_filt <- dem_filtering(chm_cim,
   nl_filter = "Closing",
   nl_size = 3,
-  sigmap = 0
+  sigma = 0
 )$non_linear_image
 
 # convert to SpatRaster

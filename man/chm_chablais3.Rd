@@ -19,6 +19,6 @@ chm_chablais3 <- terra::rast(chm_chablais3)
 terra::plot(chm_chablais3)
 }
 \references{
-Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22 & 34 \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+Monnet, J.-M. 2011. Using airborne laser scanning for mountain forests mapping: Support vector regression for stand parameters estimation and unsupervised training for treetop detection. Ph.D. thesis. University of Grenoble, France. pp. 21-22 & 34 \url{https://theses.hal.science/tel-00652698/document}
 }
 \keyword{datasets}

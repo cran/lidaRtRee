@@ -78,13 +78,13 @@ Monnet, J.-M. 2011. Using airborne laser scanning for mountain
 forests mapping: Support vector regression for stand parameters estimation 
 and unsupervised training for treetop detection. Ph.D. thesis. University of 
 Grenoble, France. Section 6.2 
-\url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+\url{https://theses.hal.science/tel-00652698/document}
 
 Monnet, J.-M., Mermin, E., Chanussot, J., Berger, F. 2010. Tree top detection 
 using local maxima filtering: a parameter sensitivity analysis. Silvilaser 2010, 
 the 10th International Conference on LiDAR Applications for Assessing Forest 
 Ecosystems, September 14-17, Freiburg, Germany, 9 p. 
-\url{https://hal.archives-ouvertes.fr/hal-00523245/document}
+\url{https://hal.science/hal-00523245/document}
 }
 \seealso{
 \code{\link{tree_segmentation}}, \code{\link{tree_extraction}}

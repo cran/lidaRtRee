@@ -64,13 +64,13 @@
 #' forests mapping: Support vector regression for stand parameters estimation 
 #' and unsupervised training for treetop detection. Ph.D. thesis. University of 
 #' Grenoble, France. Section 6.2 
-#' \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+#' \url{https://theses.hal.science/tel-00652698/document}
 #'
 #' Monnet, J.-M., Mermin, E., Chanussot, J., Berger, F. 2010. Tree top detection 
 #' using local maxima filtering: a parameter sensitivity analysis. Silvilaser 2010, 
 #' the 10th International Conference on LiDAR Applications for Assessing Forest 
 #' Ecosystems, September 14-17, Freiburg, Germany, 9 p. 
-#' \url{https://hal.archives-ouvertes.fr/hal-00523245/document}
+#' \url{https://hal.science/hal-00523245/document}
 #' @return A sf collection of POINTs with 7 fields: tree id, local maximum stats
 #'  (height, dominance radius), segment stats (surface and volume), coordinates 
 #'  (x and y). In case argument \code{crown} is \code{TRUE}, a \code{crown} field 
@@ -83,14 +83,6 @@ tree_detection <-
            normalize = FALSE,
            crown = FALSE,
            ...
-           # nl_filter = "Closing",
-           # nl_size = 5,
-           # sigma = 0.3,
-           # dmin = 0,
-           # dprop = 0.05,
-           # hmin = 5,
-           # crown_prop = 0.3,
-           # crown_hmin = 2
            )
   {
     if (!is.null(ROI))
@@ -130,26 +122,19 @@ tree_detection <-
         normalize = normalize,
         crown = crown,
         ...,
-        # nl_filter = nl_filter,
-        # nl_size = nl_size,
-        # sigma = sigma,
-        # dmin = dmin,
-        # dprop = dprop,
-        # hmin = hmin,
-        # crown_prop = crown_prop,
-        # crown_hmin = crown_hmin,
         .options = options
       )
       return(output)
       #
       # if LAScluster
     } else if (lidR::is(las, "LAScluster")) {
-      # retrieve buffer
-      buffer <- las@buffer
-      #
+      # IS IT POSSIBLE TO TEST INTERSECTION OF ROI WITH CHUNK WITHOUT BUFFER HERE ?
+      # AND OUTPUT NULL IF NO INTERSECTION ?
       x <- lidR::readLAS(las)
       if (lidR::is.empty(x))
         return(NULL)
+      # retrieve buffer
+      buffer <- las@buffer
       # if ROI present
       if (!is.null(ROI))
       {
@@ -168,14 +153,6 @@ tree_detection <-
         normalize = normalize,
         crown = crown,
         ...
-        # nl_filter = nl_filter,
-        # nl_size = nl_size,
-        # sigma = sigma,
-        # dmin = dmin,
-        # dprop = dprop,
-        # hmin = hmin,
-        # crown_prop = crown_prop,
-        # crown_hmin = crown_hmin
       )
       if (is.null(output)) return(NULL)
       if (nrow(output) == 0) return(NULL)
@@ -209,14 +186,6 @@ tree_detection <-
         segms <- lidaRtRee::tree_segmentation(
           las,
           ...
-          # nl_filter = nl_filter,
-          # nl_size = nl_size,
-          # sigma = sigma,
-          # dmin = dmin,
-          # dprop = dprop,
-          # hmin = hmin,
-          # crown_prop = crown_prop,
-          # crown_hmin = crown_hmin
         )
         # extract apices
         output <-
@@ -231,15 +200,6 @@ tree_detection <-
         if (nrow(output) == 0) {
           return(NULL)
         }
-        # crowns are now handled directly by tree_extraction
-        # if (crown)
-        # {
-        #   # segments_id outside of ROI to NA
-        #   if (!is.null(ROI))
-        #   {
-        #     segms$segments_id[!is.element(segms$segments_id, output$id)] <- NA
-        #   }
-        # }
         return(output)
       }
       stop("Not supported input")
@@ -286,28 +246,32 @@ create_disk <- function(width = 5) {
 #' SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})
 #' @param nl_filter string. type of non-linear filter to apply: "None", "Closing" 
 #' or "Median"
-#' @param nl_size numeric. kernel width in pixel for non-linear filtering
-#' @param sigmap numeric or matrix. if a single number is provided, sigmap is 
-#' the standard deviation of the Gaussian filter in pixel, 0 corresponds to no 
-#' smoothing. In case of matrix, the first column corresponds to the standard 
+#' @param nl_size numeric. kernel width in pixels for non-linear filtering
+#' @param sigma numeric or matrix. If a single number is provided, \code{sigma} is 
+#' the standard deviation of the Gaussian filter, 0 corresponds to no 
+#' smoothing. Unit is pixel in case \code{dem} is a cimg object, SpatRaster units 
+#' otherwise. In case of a matrix, the first column corresponds to the standard 
 #' deviation of the filter, and the second to thresholds for image values (e.g. 
 #' a filter of standard deviation specified in line \code{i} is applied to pixels 
 #' in image which values are between thresholds indicated in lines \code{i} and 
 #' \code{i+1}). Threshold values should be ordered in increasing order.
 #' @param padding boolean. Whether image should be padded by duplicating edge 
 #' values before filtering to avoid border effects
+#' @param sigmap deprecated (numeric or matrix). (old name for \code{sigma} parameter, 
+#' retained for backward compatibility, overwrites \code{sigma} if provided, unit is 
+#' pixel whatever the class of \code{dem}) 
 #' @examples
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
 #'
 #' # filtering with median and Gaussian smoothing
-#' im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigmap = 0.8)
+#' im <- dem_filtering(chm_chablais3, nl_filter = "Median", nl_size = 3, sigma = 0.8)
 #'
 #' # filtering with median filter and value-dependent Gaussian smoothing
 #' # (less smoothing for values between 0 and 15)
 #' im2 <- dem_filtering(chm_chablais3,
 #'   nl_filter = "Median", nl_size = 3,
-#'   sigmap = cbind(c(0.2, 0.8), c(0, 15))
+#'   sigma = cbind(c(0.2, 0.8), c(0, 15))
 #' )
 #'
 #' # plot original image
@@ -327,22 +291,34 @@ create_disk <- function(width = 5) {
 #' @return A list of two cimg objects or a SpatRaster object with image after non-linear 
 #' filter and image after both filters
 #' @export
-dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3, 
-                          padding = TRUE) {
+dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0.3, 
+                          padding = TRUE, sigmap = NULL) {
   # convert raster to cimg object if necessary
   if (inherits(dem, "SpatRaster")) {
     dem.c <- raster2Cimg(dem)
+    # conversion of Gaussian filter standard deviation from meters to pixels
+    if (length(sigma == 1)) {
+      sigma <- sigma / terra::res(dem)[1]
+    } else {
+      sigma[, 2] <- sigma[, 2] / terra::res(dem)[1]
+    }
   } else {
     dem.c <- dem
+  }
+  # if sigmap argument present, its value (in pixels) overrides sigma
+  if (!is.null(sigmap))
+  {
+    sigma <- sigmap
+    warning("sigmap argument in function dem_filtering is deprecated, please use its new name sigma")
   }
   #
   if (padding) {
     # padding number of cells is maximum of half width of non linear filter or 
-    # ceiling value of three times sigmap
-    if (!is.null(dim(sigmap))) {
-      dummy <- max(sigmap[, 1])
+    # ceiling value of three times sigma
+    if (!is.null(dim(sigma))) {
+      dummy <- max(sigma[, 1])
     } else {
-      dummy <- sigmap
+      dummy <- sigma
     }
     border.size <- max((nl_size - 1) / 2 + 1, ceiling(dummy * 3))
     # convert to matrix
@@ -372,23 +348,23 @@ dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3,
   # linear filtering
   # gaussian smoothing
   # if several values of sigma are provided, value-dependent smoothin is performed
-  if (length(sigmap) > 1) {
+  if (length(sigma) > 1) {
     dem_gs <- dem_nl
     # for each value of sigma
-    for (i in 1:nrow(sigmap))
+    for (i in 1:nrow(sigma))
     {
       # perform 2D smoothing
-      dummy <- imager::deriche(dem_nl, sigmap[i, 1], axis = "x")
-      dummy <- imager::deriche(dummy, sigmap[i, 1], axis = "y")
+      dummy <- imager::deriche(dem_nl, sigma[i, 1], axis = "x")
+      dummy <- imager::deriche(dummy, sigma[i, 1], axis = "y")
       # identify pixels which values are superior to the threshold
-      temp <- dem_gs >= sigmap[i, 2]
+      temp <- dem_gs >= sigma[i, 2]
       # update only those values in the output
       dem_gs[temp] <- dummy[temp]
     }
   } else { # if only one value of sigma is provided
-    if (sigmap > 0) {
-      dem_gs <- imager::deriche(dem_nl, sigmap, axis = "x")
-      dem_gs <- imager::deriche(dem_gs, sigmap, axis = "y")
+    if (sigma > 0) {
+      dem_gs <- imager::deriche(dem_nl, sigma, axis = "x")
+      dem_gs <- imager::deriche(dem_gs, sigma, axis = "y")
     } else { # if 0, no smoothing is performed
       dem_gs <- dem_nl
     }
@@ -424,13 +400,13 @@ dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3,
 #' SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})
 #' @param dem.res numeric. image resolution, in case \code{dem} is a SpatRaster 
 #' object, \code{dem.res} is extracted from the object by \code{\link[terra]{res}}
-#' @param max.width numeric. maximum kernel width in pixel to check for local 
-#' maximum
+#' @param max.width numeric. maximum kernel width to check for local maximum, in 
+#' pixels if \code{dem} is a cimg, in SpatRaster units otherwise
 #' @param jitter boolean. indicates if noise should be added to image values to 
-#' avoid the adjacent maxima due to the adjacent pixels with equal values
-#' @return A cimg object or SpatRaster object which values are the radius (n) 
-#' in meter of the square window (width 2n+1) where the center pixel is global 
-#' maximum
+#' avoid adjacent maxima due to the adjacent pixels with equal values
+#' @return A cimg object / SpatRaster object which values correspond to the radius 
+#' (n) in pixels / meters of the square window (width 2n+1) where the center pixel is global 
+#' maximum (tested up to the \code{max.width} parameter)
 #' @examples
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
@@ -443,18 +419,21 @@ dem_filtering <- function(dem, nl_filter = "Closing", nl_size = 5, sigmap = 0.3,
 #'
 #' # plot maxima image
 #' terra::plot(maxi, main = "Local maxima")
-#' @seealso \code{\link{dem_filtering}}, \code{\link{maxima_selection}}
+#' @seealso \code{\link{dem_filtering}}, \code{\link{maxima_selection}}, 
+#' \code{\link{tree_segmentation}}
 #' @export
-maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
+maxima_detection <- function(dem, dem.res = 1, max.width = 11, jitter = TRUE) {
   # convert raster to cimg object if necessary
   if (inherits(dem, "SpatRaster")) {
     dem_gs <- raster2Cimg(dem)
     dem.res <- terra::res(dem)[1]
+    max.width <- max.width / dem.res
   } else {
     dem_gs <- dem
   }
   #
   # add absolute of gaussian white noise, mean=0, sd=sd(dem_gs)/100000 to non 0 pixels
+  # avoids adjacent maxima but output maybe not reproducible
   if (jitter) {
     dem_gs <- dem_gs + abs(imager::imnoise(
       dim = dim(dem_gs), 
@@ -463,42 +442,77 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
   #
   max.radius <- max.width %/% 2
   # extraction of maxima on variable window size (from 0 to max.radius)
-  maxi <- NULL
-  for (i in 1:max.radius)
+  # METHOD 1 using lapply
+  # maxi <- lapply(1:max.radius, function(i)
+  # {
+  #   # create square structuring element for dilation
+  #   strel <- imager::imfill(2 * i + 1, 2 * i + 1, val = 1)
+  #   # check where pixel values are equal in original image and 
+  #   # in image dilated by structuring element
+  #   imager::as.cimg(dem_gs == imager::dilate(dem_gs, strel)) * i
+  # }
+  # )
+  # # retain only max value from each image
+  # maxi <- imager::parmax(maxi2, na.rm = TRUE)
+  #
+  # METHOD 2 using a for loop (avoid storing multiple images at the same time)
+  # used in lidaRtRee <= 4.0.4
+  # maxi <- NULL
+  # for (i in 1:max.radius)
+  # {
+  #   # create square structuring element for dilation
+  #   strel <- imager::imfill(2 * i + 1, 2 * i + 1, val = 1)
+  #   # if initialization check where pixel values are equal in original image and
+  #   # in image dilated by structuring element
+  #   if (is.null(maxi)) {
+  #     maxi <- imager::as.cimg(dem_gs == imager::dilate(dem_gs, strel)) * i
+  #     # otherwise perform check and update previous result
+  #   } else {
+  #     maxi <- imager::parmax(list(maxi,
+  #                                 imager::as.cimg(dem_gs == imager::dilate(dem_gs, strel)) * i), na.rm = TRUE)
+  #   }
+  # }
+  # METHOD 3 : using a for loop with iterative dilation -> faster
+  # create 3x3 square structuring element for dilation
+  strel <- imager::imfill(3, 3, val = 1)
+  # first dilation (radius = 1)
+  dem_dilate <- imager::dilate(dem_gs, strel)
+  # first result
+  maxi <- imager::as.cimg(dem_gs == dem_dilate)
+  # loop on increasing radius
+  for (i in 2:max.radius)
   {
-    # create square structuring element for dilation
-    strel <- imager::imfill(2 * i + 1, 2 * i + 1, val = 1)
-    # if initialization check where pixel values are equal in original image and 
-    # in image dilated by structuring element
-    if (is.null(maxi)) {
-      maxi <- imager::as.cimg(dem_gs == imager::dilate(dem_gs, strel)) * i
-      # otherwise perform check and update previous result
-    } else {
-      maxi <- imager::parmax(list(maxi, 
-                                  imager::as.cimg(dem_gs == imager::dilate(dem_gs, strel)) * i))
-    }
+    # dilate more
+    dem_dilate <- imager::dilate(dem_dilate, strel)
+    # perform check and update previous result
+    maxi <- imager::parmax(list(maxi, 
+                                imager::as.cimg(dem_gs == dem_dilate) * i), na.rm = TRUE)
   }
+  #
   # convert window size from pixels to meters
-  maxi[maxi > 0] <- (maxi[maxi > 0] + 1) * dem.res
+  maxi <- ( maxi > 0) * (maxi + 1) * dem.res
   # convert cimg objects to raster if necessary
   if (inherits(dem, "SpatRaster")) {
     maxi <- cimg2Raster(maxi, dem)
   }
   maxi
 }
-
 #-------------------------------------------------------------------------------
 #' Image maxima selection based on values and neighborhood of local maxima
 #'
 #' In a maxima image (output of \code{\link{maxima_detection}}), sets values to 
-#' zero for pixels which
+#' zero for pixels which:
 #' \enumerate{
-#' \item value in the initial image (from which maxima were detected) are below 
+#' \item values in the initial image (from which maxima were detected) are below 
 #' a threshold
 #' \item values in the maxima image (corresponding to the radius of the 
 #' neighborhood where they are global maxima) are below a threshold depending on 
 #' the initial image value.
 #' }
+#' Make sure that the \code{max.width} parameter in \code{\link{maxima_detection}}
+#' is consistent with the selection parameters (e.g. do not select with 
+#' \code{dmin = 7} if values were only tested up to \code{max.width} the default 
+#' value which is approx. 5.5 m).
 #'
 #' @param maxi cimg object or SpatRaster object. image with local maxima 
 #' (typically output from \code{\link{maxima_detection}}, image values correspond 
@@ -521,8 +535,8 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
 #'
 #' # several maxima selection settings
 #' selected_maxi_hmin <- maxima_selection(maxi, chm_chablais3, hmin = 15)
-#' selected_maxi_dm <- maxima_selection(maxi, chm_chablais3, dm = 2.5)
-#' selected_maxi <- maxima_selection(maxi, chm_chablais3, dm = 1, dprop = 0.1)
+#' selected_maxi_dm <- maxima_selection(maxi, chm_chablais3, dmin = 2.5)
+#' selected_maxi <- maxima_selection(maxi, chm_chablais3, dmin = 1, dprop = 0.1)
 #'
 #' # corresponding count number of remaining maxima
 #' table(terra::values(maxi))
@@ -536,9 +550,9 @@ maxima_detection <- function(dem, dem.res = 1, max.width = 21, jitter = TRUE) {
 #' # plot maxima images, original and first case
 #' terra::plot(maxi, main = "Local maxima")
 #' terra::plot(selected_maxi, main = "Selected maxima")
-#' @seealso \code{\link{maxima_detection}}
+#' @seealso \code{\link{maxima_detection}}, \code{\link{tree_segmentation}}
 #' @export
-maxima_selection <- function(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0) {
+maxima_selection <- function(maxi, dem_nl, hmin = 5, dmin = 0, dprop = 0.05) {
   # convert SpatRaster to cimg object if necessary
   if (inherits(maxi, "SpatRaster")) {
     israster <- TRUE
@@ -577,7 +591,7 @@ maxima_selection <- function(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0) {
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
 #'   nl_filter = "Median", nl_size = 3,
-#'   sigmap = 0
+#'   sigma = 0
 #' )$non_linear_image
 #'
 #' # maxima detection
@@ -620,6 +634,8 @@ segmentation <- function(maxi, dem_nl) {
   # create seed image
   dummy <- maxi_c
   # initialise seeds with id
+  # WHY USE SAMPLE HERE ?
+  # tree id different in each run but segments more visible when plotted
   dummy[a] <- sample(1:na, na)
   # watershed segmentation
   dem_w <- imager::watershed(dummy, dem_nl)
@@ -649,7 +665,7 @@ segmentation <- function(maxi, dem_nl) {
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
 #'   nl_filter = "Median", nl_size = 3,
-#'   sigmap = 0
+#'   sigma = 0
 #' )$non_linear_image
 #'
 #' # maxima detection
@@ -718,7 +734,7 @@ raster_zonal_stats <- function(segms, dem_nl, fun = max) {
 #' # median filter
 #' chm_chablais3 <- dem_filtering(chm_chablais3,
 #'   nl_filter = "Median", nl_size = 3,
-#'   sigmap = 0
+#'   sigma = 0
 #' )$non_linear_image
 #'
 #' # maxima detection and selection
@@ -782,39 +798,35 @@ seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.max
 #' @param dem raster object or string indicating location of raster file 
 #' (typically a canopy height model or a digital surface model; in the latter 
 #' case the dtm parameter should be provided)
-#' @param nl_filter string. specifies the non-linear filter for image pre-processing, 
-#' should be an option of function \code{\link{dem_filtering}}
-#' @param nl_size numeric. width of kernel of non-linear filter in pixels
-#' @param sigma numeric or matrix. if a single number is provided, sigmap is the 
-#' standard deviation of Gaussian filter in meters, 0 corresponds to no smoothing. 
-#' In case of matrix, the first column corresponds to the standard deviation of 
-#' the filter, and the second to thresholds for image values (e.g. a filter of 
-#' standard deviation specified in line \code{i} is applied to pixels in image 
-#' which values are between thresholds indicated in lines \code{i} and 
-#' \code{i+1}). Threshold values should be ordered in increasing order.
-#' @param dmin numeric. treetop minimum distance to next higher pixel in meters
-#' @param dprop numeric. number defining the treetop minimum distance as 
-#' proportion of height to next higher pixel
-#' @param hmin numeric. minimum treetop height
-#' @param crown_prop numeric. minimum height of tree crown as proportion of 
-#' treetop height
-#' @param crown_hmin numeric. minimum crown height
 #' @param dtm raster object or string indicating location of raster file with 
 #' the terrain model. If provided, the maxima extraction and watershed segmentation 
 #' are performed on the dem (this avoids the deformation of crown because of the 
 #' normalisation with terrain), but maxima selection and segment adjustment are 
-#' performed on 'dem-dtm' because the selection criteria is the height to terrain.
+#' performed on 'dem-dtm' because the selection criteria are based on the height to terrain.
+#' @param ... arguments passed to functions \code{\link{dem_filtering}}
+#' (e.g. \code{nl_filter}, \code{nl_size}, \code{sigma}), 
+#' \code{\link{maxima_detection}}, \code{\link{maxima_selection}}, 
+#' \code{\link{maxima_selection}} (\code{dmin}: treetop minimum distance to next
+#' higher pixel in meters, \code{dprop}: number defining the treetop minimum 
+#' distance as proportion of its height to next higher pixel, \code{hmin}: 
+#' minimum treetop height), \code{\link{seg_adjust}} (\code{prop}: minimum 
+#' height of tree crown base as proportion of treetop height, \code{min.value}: 
+#' minimum crown base height)
+#' @param crown_prop (deprecated) numeric. (overrides \code{prop} parameter 
+#' passed to \code{\link{seg_adjust}}, for backward compatibility)
+#' @param crown_hmin (deprecated) numeric. (overrides \code{min.value} parameter 
+#' passed to \code{\link{seg_adjust}}, for backward compatibility)
 #' @references Monnet, J.-M. 2011. Using airborne laser scanning for mountain 
 #' forests mapping: Support vector regression for stand parameters estimation 
 #' and unsupervised training for treetop detection. Ph.D. thesis. University of 
 #' Grenoble, France. Section 6.2 
-#' \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+#' \url{https://theses.hal.science/tel-00652698/document}
 #'
 #' Monnet, J.-M., Mermin, E., Chanussot, J., Berger, F. 2010. Tree top detection 
 #' using local maxima filtering: a parameter sensitivity analysis. Silvilaser 2010, 
 #' the 10th International Conference on LiDAR Applications for Assessing Forest 
 #' Ecosystems, September 14-17, Freiburg, Germany, 9 p. 
-#' \url{https://hal.archives-ouvertes.fr/hal-00523245/document}
+#' \url{https://hal.science/hal-00523245/document}
 #' @examples
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
@@ -847,12 +859,34 @@ seg_adjust <- function(dem_w, dem_wh, dem_nl, prop = 0.3, min.value = 2, min.max
 #' distance to higher pixel), segments, non-linear preprocessed dem, smoothed 
 #' preprocessed dem
 #' @export
-tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0.3, 
-                              dmin = 0, dprop = 0.05, hmin = 5, crown_prop = 0.3, 
-                              crown_hmin = 2, dtm = NULL) {
+tree_segmentation <- function(dem, dtm = NULL, crown_prop = NULL, crown_hmin = NULL, ...) {
   #
-  if (crown_hmin > hmin) {
-    stop("minimum tree height lower than minimum crown height")
+  # sort dots arguments
+  # expected arguments for subsequent functions
+  dem_filtering.args <- names(formals(dem_filtering)) #  nl_filter = "Closing", nl_size = 5, sigma = 0.3
+  maxima_detection.args <- names(formals(maxima_detection))
+  maxima_selection.args <- names(formals(maxima_selection)) # dmin = 0, dprop = 0.05, hmin = 5
+  seg_adjust.args <- names(formals(seg_adjust)) # crown_prop = 0.3, crown_hmin = 2
+  # dots arguments
+  dots <- list(...)
+  # set default values
+  # handle deprecated values
+  if (!is.null(crown_prop))
+  {
+    dots$prop <- crown_prop
+    warning("Argument crown_prop is deprecated, please use its new name: prop which is passed to function seg_adjust")
+  }
+  if (!is.null(crown_hmin))
+  {
+    dots$min.value <- crown_hmin
+    warning("Argument crown_hmin is deprecated, please use its new name: min.value which is passed to function seg_adjust")
+  }
+  #
+  if (all(is.element(c("min.value", "hmin"), names(dots))))
+  {
+    if (dots$min.value > dots$hmin) {
+      stop("minimum tree height lower than minimum crown base height")
+    }
   }
   dem <- convert_raster(dem, "terra")
   # convert NAs to terrain altitude
@@ -864,30 +898,47 @@ tree_segmentation <- function(dem, nl_filter = "Closing", nl_size = 5, sigma = 0
     dem[is.na(dem)] <- dtm
   }
   #
-  # conversion of Gaussian filter standard deviation from meters to pixels
-  if (length(sigma == 1)) {
-    sigma <- sigma / terra::res(dem)[1]
-  } else {
-    sigma[, 2] <- sigma[, 2] / terra::res(dem)[1]
-  }
   # dem filtering
-  temp <- dem_filtering(dem, nl_filter = nl_filter, nl_size = nl_size, sigmap = sigma)
+  # temp <- dem_filtering(dem, nl_filter = nl_filter, nl_size = nl_size, sigma = sigma)
+  temp <- do.call('dem_filtering', c(list(dem), dots[names(dots) %in% dem_filtering.args]))
   dem_nl <- temp$non_linear_image
   dem_gs <- temp$smoothed_image
   #
   # maxima detection
-  maxi <- maxima_detection(dem_gs, terra::res(dem)[1])
+  # maxi <- maxima_detection(dem_gs, terra::res(dem)[1])
+  maxi <- do.call('maxima_detection', c(list(dem_gs), dots[names(dots) %in% maxima_detection.args]))
   #
+  # chm
+  chm <- dem_nl - dtm
   # maxima selection
-  maxi <- maxima_selection(maxi, dem_nl - dtm, 0, dmin, dprop) # no selection based on top height at this stage, otherwise some artefacts occur in the watershed step
+  # check detection parameters (window size) with selection parameters
+  temp_dmin <- ifelse(methods::hasArg("dmin"), dots$dmin, formals(maxima_selection)$dmin)
+  temp_dprop <- ifelse(methods::hasArg("dprop"), dots$dprop, formals(maxima_selection)$dprop)
+  temp_max.width <- ifelse(methods::hasArg("max.width"), dots$max.width, formals(maxima_detection)$max.width)
+  if (temp_dmin + temp_dprop * terra::global(chm, fun="max",  na.rm = TRUE) >= (temp_max.width / terra::res(dem)[1]) %/% 2)
+    warning("Window size for detecting local maxima might be too small to ensure that function maxima_selection returns a correct output. Make sure that parameter max.width in function maxima_detection is appropriate, or consider reducing dmin or dprop parameters in maxima_selection")
+  #
+  # no selection based on top height at this stage, otherwise some artefacts occur in the watershed step
+  # maxi <- maxima_selection(maxi, chm, 0, dmin, dprop) 
+  maxi <- do.call('maxima_selection', c(list(maxi, chm, hmin = 0), dots[names(dots) %in% setdiff(maxima_selection.args, "hmin")]))
   #
   # segmentation
   dem_w <- segmentation(maxi, dem_nl)
-  dem_wh <- raster_zonal_stats(dem_w, dem_nl - dtm, fun = max)
+  dem_wh <- raster_zonal_stats(dem_w, chm, fun = max)
   #
   # segmentation adjustment
-  dem_w <- seg_adjust(dem_w, dem_wh, dem_nl - dtm, crown_prop, crown_hmin, hmin) # removal of trees with top heigth < hmin
-  # remove trees from r_maxi
+  # pass hmin parameter for selection to min.maxvalue parameter for seg_adjust
+  temp_hmin <- ifelse(methods::hasArg("hmin"), dots$hmin, formals(maxima_selection)$hmin)
+  dots$min.maxvalue <- temp_hmin
+  if (methods::hasArg("min.maxvalue"))
+  {
+    warning(paste0("min.maxvalue parameter value in seg_adjust in set to the same value as hmin parameter (", temp_hmin, ") in maxima_selection for constitency. To manually specify the minimum tree height please use only the hmin parameter"))
+  }
+
+  # dem_w <- seg_adjust(dem_w, dem_wh, chm, crown_prop, crown_hmin, hmin) # removal of trees with top heigth < hmin
+  dem_w <- do.call('seg_adjust', c(list(dem_w, dem_wh, chm), dots[names(dots) %in% seg_adjust.args]))# prop = crown_prop, min.value = hmin)))
+  # remove local maxima from r_maxi where segments may have been removed because of 
+  # height criterion
   maxi[dem_w == 0] <- 0
   #
   output <- c(maxi, dem_w, dem_nl, dem_gs)
@@ -1053,7 +1104,7 @@ tree_extraction <- function(r_dem_nl, r_maxi = NULL, r_dem_w = NULL, r_mask = NU
 #' chm_cim_filt <- dem_filtering(chm_cim,
 #'   nl_filter = "Closing",
 #'   nl_size = 3,
-#'   sigmap = 0
+#'   sigma = 0
 #' )$non_linear_image
 #'
 #' # convert to SpatRaster

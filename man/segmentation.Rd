@@ -26,7 +26,7 @@ chm_chablais3 <- terra::rast(chm_chablais3)
 # median filter
 chm_chablais3 <- dem_filtering(chm_chablais3,
   nl_filter = "Median", nl_size = 3,
-  sigmap = 0
+  sigma = 0
 )$non_linear_image
 
 # maxima detection

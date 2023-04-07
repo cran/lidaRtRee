@@ -4,7 +4,7 @@
 \alias{maxima_detection}
 \title{Local maxima extraction on image}
 \usage{
-maxima_detection(dem, dem.res = 1, max.width = 21, jitter = TRUE)
+maxima_detection(dem, dem.res = 1, max.width = 11, jitter = TRUE)
 }
 \arguments{
 \item{dem}{cimg object (e.g. as created by \code{\link[imager]{cimg}}) or 
@@ -13,16 +13,16 @@ SpatRaster object (e.g. obtained with \code{\link[terra]{rast}})}
 \item{dem.res}{numeric. image resolution, in case \code{dem} is a SpatRaster 
 object, \code{dem.res} is extracted from the object by \code{\link[terra]{res}}}
 
-\item{max.width}{numeric. maximum kernel width in pixel to check for local 
-maximum}
+\item{max.width}{numeric. maximum kernel width to check for local maximum, in 
+pixels if \code{dem} is a cimg, in SpatRaster units otherwise}
 
 \item{jitter}{boolean. indicates if noise should be added to image values to 
-avoid the adjacent maxima due to the adjacent pixels with equal values}
+avoid adjacent maxima due to the adjacent pixels with equal values}
 }
 \value{
-A cimg object or SpatRaster object which values are the radius (n) 
-in meter of the square window (width 2n+1) where the center pixel is global 
-maximum
+A cimg object / SpatRaster object which values correspond to the radius 
+(n) in pixels / meters of the square window (width 2n+1) where the center pixel is global 
+maximum (tested up to the \code{max.width} parameter)
 }
 \description{
 Variable window size maxima detection is performed on the image to extract 
@@ -44,5 +44,6 @@ terra::plot(chm_chablais3, main = "Initial image")
 terra::plot(maxi, main = "Local maxima")
 }
 \seealso{
-\code{\link{dem_filtering}}, \code{\link{maxima_selection}}
+\code{\link{dem_filtering}}, \code{\link{maxima_selection}}, 
+\code{\link{tree_segmentation}}
 }

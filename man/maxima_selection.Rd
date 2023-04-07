@@ -4,7 +4,7 @@
 \alias{maxima_selection}
 \title{Image maxima selection based on values and neighborhood of local maxima}
 \usage{
-maxima_selection(maxi, dem_nl, hmin = 0, dmin = 0, dprop = 0)
+maxima_selection(maxi, dem_nl, hmin = 5, dmin = 0, dprop = 0.05)
 }
 \arguments{
 \item{maxi}{cimg object or SpatRaster object. image with local maxima 
@@ -28,14 +28,18 @@ maximum and which fulfill the selection criteria
 }
 \description{
 In a maxima image (output of \code{\link{maxima_detection}}), sets values to 
-zero for pixels which
+zero for pixels which:
 \enumerate{
-\item value in the initial image (from which maxima were detected) are below 
+\item values in the initial image (from which maxima were detected) are below 
 a threshold
 \item values in the maxima image (corresponding to the radius of the 
 neighborhood where they are global maxima) are below a threshold depending on 
 the initial image value.
 }
+Make sure that the \code{max.width} parameter in \code{\link{maxima_detection}}
+is consistent with the selection parameters (e.g. do not select with 
+\code{dmin = 7} if values were only tested up to \code{max.width} the default 
+value which is approx. 5.5 m).
 }
 \examples{
 data(chm_chablais3)
@@ -46,8 +50,8 @@ maxi <- maxima_detection(chm_chablais3)
 
 # several maxima selection settings
 selected_maxi_hmin <- maxima_selection(maxi, chm_chablais3, hmin = 15)
-selected_maxi_dm <- maxima_selection(maxi, chm_chablais3, dm = 2.5)
-selected_maxi <- maxima_selection(maxi, chm_chablais3, dm = 1, dprop = 0.1)
+selected_maxi_dm <- maxima_selection(maxi, chm_chablais3, dmin = 2.5)
+selected_maxi <- maxima_selection(maxi, chm_chablais3, dmin = 1, dprop = 0.1)
 
 # corresponding count number of remaining maxima
 table(terra::values(maxi))
@@ -63,5 +67,5 @@ terra::plot(maxi, main = "Local maxima")
 terra::plot(selected_maxi, main = "Selected maxima")
 }
 \seealso{
-\code{\link{maxima_detection}}
+\code{\link{maxima_detection}}, \code{\link{tree_segmentation}}
 }

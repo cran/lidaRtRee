@@ -46,7 +46,7 @@ sum(terra::values(edges_outside)) / (nrow(edges_outside) * ncol(edges_outside))
 terra::plot(chm_chablais3, main = "Initial image")
 
 # plot binary image of gaps
-terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+terra::plot(gaps$gap_id > 0, main = "Gaps", col = "green", legend = FALSE)
 
 # plot edges
 terra::plot(edges_inside, main = "Edges (inside)", legend = FALSE)

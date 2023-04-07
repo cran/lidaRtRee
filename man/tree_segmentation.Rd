@@ -4,54 +4,34 @@
 \alias{tree_segmentation}
 \title{Preprocessing and segmentation of raster image for tree identification}
 \usage{
-tree_segmentation(
-  dem,
-  nl_filter = "Closing",
-  nl_size = 5,
-  sigma = 0.3,
-  dmin = 0,
-  dprop = 0.05,
-  hmin = 5,
-  crown_prop = 0.3,
-  crown_hmin = 2,
-  dtm = NULL
-)
+tree_segmentation(dem, dtm = NULL, crown_prop = NULL, crown_hmin = NULL, ...)
 }
 \arguments{
 \item{dem}{raster object or string indicating location of raster file 
 (typically a canopy height model or a digital surface model; in the latter 
 case the dtm parameter should be provided)}
 
-\item{nl_filter}{string. specifies the non-linear filter for image pre-processing, 
-should be an option of function \code{\link{dem_filtering}}}
-
-\item{nl_size}{numeric. width of kernel of non-linear filter in pixels}
-
-\item{sigma}{numeric or matrix. if a single number is provided, sigmap is the 
-standard deviation of Gaussian filter in meters, 0 corresponds to no smoothing. 
-In case of matrix, the first column corresponds to the standard deviation of 
-the filter, and the second to thresholds for image values (e.g. a filter of 
-standard deviation specified in line \code{i} is applied to pixels in image 
-which values are between thresholds indicated in lines \code{i} and 
-\code{i+1}). Threshold values should be ordered in increasing order.}
-
-\item{dmin}{numeric. treetop minimum distance to next higher pixel in meters}
-
-\item{dprop}{numeric. number defining the treetop minimum distance as 
-proportion of height to next higher pixel}
-
-\item{hmin}{numeric. minimum treetop height}
-
-\item{crown_prop}{numeric. minimum height of tree crown as proportion of 
-treetop height}
-
-\item{crown_hmin}{numeric. minimum crown height}
-
 \item{dtm}{raster object or string indicating location of raster file with 
 the terrain model. If provided, the maxima extraction and watershed segmentation 
 are performed on the dem (this avoids the deformation of crown because of the 
 normalisation with terrain), but maxima selection and segment adjustment are 
-performed on 'dem-dtm' because the selection criteria is the height to terrain.}
+performed on 'dem-dtm' because the selection criteria are based on the height to terrain.}
+
+\item{crown_prop}{(deprecated) numeric. (overrides \code{prop} parameter 
+passed to \code{\link{seg_adjust}}, for backward compatibility)}
+
+\item{crown_hmin}{(deprecated) numeric. (overrides \code{min.value} parameter 
+passed to \code{\link{seg_adjust}}, for backward compatibility)}
+
+\item{...}{arguments passed to functions \code{\link{dem_filtering}}
+(e.g. \code{nl_filter}, \code{nl_size}, \code{sigma}), 
+\code{\link{maxima_detection}}, \code{\link{maxima_selection}}, 
+\code{\link{maxima_selection}} (\code{dmin}: treetop minimum distance to next
+higher pixel in meters, \code{dprop}: number defining the treetop minimum 
+distance as proportion of its height to next higher pixel, \code{hmin}: 
+minimum treetop height), \code{\link{seg_adjust}} (\code{prop}: minimum 
+height of tree crown base as proportion of treetop height, \code{min.value}: 
+minimum crown base height)}
 }
 \value{
 A SpatRaster with 4 layers: selected local maxima (values = 
@@ -92,13 +72,13 @@ Monnet, J.-M. 2011. Using airborne laser scanning for mountain
 forests mapping: Support vector regression for stand parameters estimation 
 and unsupervised training for treetop detection. Ph.D. thesis. University of 
 Grenoble, France. Section 6.2 
-\url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+\url{https://theses.hal.science/tel-00652698/document}
 
 Monnet, J.-M., Mermin, E., Chanussot, J., Berger, F. 2010. Tree top detection 
 using local maxima filtering: a parameter sensitivity analysis. Silvilaser 2010, 
 the 10th International Conference on LiDAR Applications for Assessing Forest 
 Ecosystems, September 14-17, Freiburg, Germany, 9 p. 
-\url{https://hal.archives-ouvertes.fr/hal-00523245/document}
+\url{https://hal.science/hal-00523245/document}
 }
 \seealso{
 \code{\link{dem_filtering}}, \code{\link{maxima_detection}}, 

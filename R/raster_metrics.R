@@ -58,8 +58,8 @@ raster_metrics <-
            output = "raster") {
     if (inherits(r, "SpatRaster")) {
       # convert to data.frame
-      st <- terra::as.points(r)
-      st <- cbind(terra::geom(st)[, c("x", "y")], as.data.frame(terra::as.points(r)))
+      st <- terra::as.points(r, na.rm = FALSE, na.all = FALSE)
+      st <- cbind(terra::geom(st)[, c("x", "y")], as.data.frame(st))
       # backup crs
       projinfo <- terra::crs(r)
     } else {
@@ -73,6 +73,8 @@ raster_metrics <-
         projinfo <- NA
       }
     }
+    # return NULL if empty
+    if (nrow(st) == 0) return(NULL)
     # compute coordinates of new cell center at metrics resolution
     dummy <- data.frame(X = round((st[, 1] - res / 2) / res) * res + res / 2, 
                         Y = round((st[, 2] - res / 2) / res) * res + res / 2)
@@ -85,19 +87,22 @@ raster_metrics <-
     names(dummy)[1:2] <- c("X", "Y")
     # add id column or coordinates
     if (output == "raster") {
-      if (nrow(dummy) > 1) {
-        terra::rast(dummy, type = "xyz", crs = projinfo)
-      } else { # an error is returned by rasterFromXYZ when only one cell
-        # ??? still necessary for rast ?
-        # duplicate row
-        dummy2 <- rbind(dummy, dummy)
-        dummy2[2, c("X", "Y")] <- dummy2[1, c("X", "Y")] + res
-        # convert to raster
-        dummy2 <- terra::rast(dummy2, type = "xyz", crs = projinfo)
-        # crop to original extent
-        terra::crop(dummy2, terra::ext(dummy$X-res/2, dummy$X+res/2, dummy$Y-res/2, dummy$Y+res/2))
-      }
-    } else {
-      dummy
+      # create additional row and column
+      # - to avoid raster with only one row or column
+      # (an error is returned by rast with "xyz" when only one row or column)
+      # - to force lowest distance between two existing cell = resolution
+      # (a raster with yres = X * xres might be created)
+      # A TEST COULD BE ADDED TO PERFORMED THIS OPERATION ONLY IF REQUIRED ?
+      # 
+      # duplicate last line
+      dummy <- rbind(dummy[1,], dummy)
+      # move additional line to one cell low left
+      dummy[1, c("X", "Y")] <- c(min(dummy$X) - res, min(dummy$Y) - res)
+      # rasterize
+      dummy <- terra::rast(dummy, type = "xyz", crs = projinfo)
+      extent <- terra::ext(dummy)
+      # remove bottom row and left column
+      dummy <- terra::crop(dummy, terra::ext(extent$xmin + res, extent$xmax, extent$ymin + res, extent$ymax))
     }
+    dummy
   }

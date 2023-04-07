@@ -96,9 +96,9 @@ table(terra::values(gaps2$gap_id)) * terra::res(gaps2$gap_id)[1]^2
 terra::plot(chm_chablais3, main = "Initial image")
 
 # plot binary image of gaps
-terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
-terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
-terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
+terra::plot(gaps$gap_id > 0, main = "Gaps", col = "green", legend = FALSE)
+terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", col = "green", legend = FALSE)
+terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", col = "green", legend = FALSE)
 
 # plot filtered CHM
 terra::plot(gaps2$filled_chm, main = "Filtered CHM")

@@ -68,9 +68,9 @@
 #' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot binary image of gaps
-#' terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
-#' terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", legend = FALSE)
-#' terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", legend = FALSE)
+#' terra::plot(gaps$gap_id > 0, main = "Gaps", col = "green", legend = FALSE)
+#' terra::plot(gaps1$gap_id > 0, main = "Gaps, with reconstruction", col = "green", legend = FALSE)
+#' terra::plot(gaps2$gap_id > 0, main = "Gaps, no width criterion", col = "green", legend = FALSE)
 #'
 #' # plot filtered CHM
 #' terra::plot(gaps2$filled_chm, main = "Filtered CHM")
@@ -219,7 +219,7 @@ gap_detection <-
     }
     # set surface of non gaps to NA
     r_surface[is.na(r_labels)] <- NA
-    # removal of labels with small surface
+    # removal of labels with small or very large surface
     dummy <- (r_surface < min_gap_surface) | (r_surface > max_gap_surface)
     r_labels[dummy] <- r_surface[dummy] <- NA
     output <- c(r_labels, r_surface, r.nl)
@@ -263,7 +263,7 @@ gap_detection <-
 #' terra::plot(chm_chablais3, main = "Initial image")
 #'
 #' # plot binary image of gaps
-#' terra::plot(gaps$gap_id > 0, main = "Gaps", legend = FALSE)
+#' terra::plot(gaps$gap_id > 0, main = "Gaps", col = "green", legend = FALSE)
 #'
 #' # plot edges
 #' terra::plot(edges_inside, main = "Edges (inside)", legend = FALSE)

@@ -4,24 +4,30 @@
 \alias{add_vegetation_indices}
 \title{Add vegetation indices on a IRC image}
 \usage{
-add_vegetation_indices(r, all = FALSE)
+add_vegetation_indices(r, all = FALSE, scale = 255)
 }
 \arguments{
 \item{r}{raster or data.frame. Should contain bands or columns with
-names nir, r, g}
+names nir, r, g (and b)}
 
 \item{all}{boolean. indicates whether all indices should be computed;
 default:FALSE, only grvi, sr and ndvi are calculated}
+
+\item{scale}{numeric. values in bands are scaled from range [0, scale] to [0, 1]}
 }
 \value{
 a raster or data.frame with added bands or columns
 }
 \description{
-Computes vegetations indices from the Red, Green and Infra-Red bands of an IRC
-image and adds them as additionnal bands or columns. Indices are listed on
-\url{https://www.l3harrisgeospatial.com/docs/broadbandgreenness.html}
+Computes vegetation indices from the Red, Green and Infra-Red bands of an IRC
+image and adds them as additional bands or columns. Acronyms are listed on
+\url{https://www.l3harrisgeospatial.com/docs/broadbandgreenness.html}. If the 
+Blue band is also present, additional indices are computed.
 }
 \examples{
-df <- data.frame(nir = c(110, 150, 20), r = c(25, 50, 30), g = c(10, 60, 10))
+df <- data.frame(nir = c(110, 150, 20),
+r = c(25, 50, 30),
+g = c(10, 60, 10),
+b = c(20, 60, 0))
 add_vegetation_indices(df, all = TRUE)
 }

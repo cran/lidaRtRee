@@ -22,12 +22,12 @@
 #' @references Monnet, J.-M. 2011. Using airborne laser scanning for mountain
 #' forests mapping: Support vector regression for stand parameters estimation
 #' and unsupervised training for treetop detection. Ph.D. thesis. University of
-#' Grenoble, France. pp. 53-55 \url{https://tel.archives-ouvertes.fr/tel-00652698/document}
+#' Grenoble, France. pp. 53-55 \url{https://theses.hal.science/tel-00652698/document}
 #'
 #' Monnet, J.-M., Mermin, E., Chanussot, J., Berger, F. 2010. Tree top detection
 #' using local maxima filtering: a parameter sensitivity analysis. Silvilaser 2010,
 #' the 10th International Conference on LiDAR Applications for Assessing Forest
-#' Ecosystems, September 14-17, Freiburg, Germany, 9 p. \url{https://hal.archives-ouvertes.fr/hal-00523245/document}
+#' Ecosystems, September 14-17, Freiburg, Germany, 9 p. \url{https://hal.science/hal-00523245/document}
 #' @seealso \code{\link{plot_matched}}, \code{\link{hist_detection}}
 #' @examples
 #' # create reference and detected trees
@@ -142,11 +142,11 @@ plot_matched <- function(lr, ld, matched, chm = NULL, plot_border = NULL, ...) {
   # display raster background or not
   if (!is.null(chm)) {
     if(!inherits(chm, "SpatRaster")) chm <- convert_raster(chm)
-    terra::plot(chm, asp = 1, ...)
+    terra::plot(chm, ...)
     # add points of detected and reference trees
     graphics::points(rbind(lr[, 1:2], ld[, 1:2]), 
                      pch = c(rep(1, nrow(lr)), rep(2, nrow(ld))), 
-                     asp = 1, cex = c(lr[, 3], ld[, 3]) / 20, 
+                     cex = c(lr[, 3], ld[, 3]) / 20, 
                      col = c(couleur_lr, couleur_ld))
   } else {
     # add points of detected and reference trees
