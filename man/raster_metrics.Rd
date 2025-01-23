@@ -11,6 +11,7 @@ raster_metrics(
   fun = function(x) {
      data.frame(mean = mean(x[, 3]), sd = stats::sd(x[, 3]))
  },
+  start = c(0, 0),
   output = "raster"
 )
 }
@@ -23,6 +24,8 @@ of r resolution if a raster is provided}
 \item{fun}{function. Function to compute metrics in each aggregated cell from
 the values contained in the initial raster (use x$layer to access raster
 values) / data.frame (use x$colum_name to access values)}
+
+\item{start}{vector of x and y coordinates for the reference raster. Default is (0,0) meaning that the grid aligns on (0,0).}
 
 \item{output}{string. indicates the class of output object "raster" for a SpatRaster or "data.frame"}
 }
@@ -39,6 +42,8 @@ as a data.frame with the XY coordinates of the larger cells, or as SpatRaster.
 \examples{
 data(chm_chablais3)
 chm_chablais3 <- terra::rast(chm_chablais3)
+# replace NA with zeros
+chm_chablais3[is.na(chm_chablais3)] <- 0
 
 # raster metrics from raster
 metrics1 <- raster_metrics(chm_chablais3, res = 10)

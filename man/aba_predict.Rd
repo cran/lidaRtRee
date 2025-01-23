@@ -9,7 +9,8 @@ aba_predict(
   metrics_map,
   stratum = NULL,
   add_error = FALSE,
-  pkg = "terra"
+  pkg = "terra",
+  ...
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ N(0, sigma(residuals)) should be added to fitted values; implemented only for
 
 \item{pkg}{raster output format. Use pkg = "terra|raster|stars" to get an output in SpatRaster, RasterLayer
 or stars format.}
+
+\item{...}{other parameters to be passed to \code{\link[stats]{predict.lm}}, e.g. \code{interval = "prediction"},}
 }
 \value{
 a raster of predictions obtained by applying the model \code{aba_build_model}

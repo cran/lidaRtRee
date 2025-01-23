@@ -43,6 +43,8 @@ proposed by Bouvier et al.
 LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 las_chablais3 <- lidR::readLAS(LASfile)
 
+# set number of threads
+lidR::set_lidr_threads(2)
 # extract two point clouds from LAS object
 llas <- lidR::clip_circle(las_chablais3,
                           c(974350, 974390),

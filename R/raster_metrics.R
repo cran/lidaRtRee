@@ -17,12 +17,15 @@
 #' @param fun function. Function to compute metrics in each aggregated cell from
 #' the values contained in the initial raster (use x$layer to access raster
 #' values) / data.frame (use x$colum_name to access values)
+#' @param start	vector of x and y coordinates for the reference raster. Default is (0,0) meaning that the grid aligns on (0,0). 
 #' @param output string. indicates the class of output object "raster" for a SpatRaster or "data.frame"
 #' @return a data.frame with the XY center coordinates of the aggregated cells,
 #' and the values computed with the user-specified function, or a SpatRaster object
 #' @examples
 #' data(chm_chablais3)
 #' chm_chablais3 <- terra::rast(chm_chablais3)
+#' # replace NA with zeros
+#' chm_chablais3[is.na(chm_chablais3)] <- 0
 #'
 #' # raster metrics from raster
 #' metrics1 <- raster_metrics(chm_chablais3, res = 10)
@@ -55,6 +58,7 @@ raster_metrics <-
            fun = function(x) {
              data.frame(mean = mean(x[, 3]), sd = stats::sd(x[, 3]))
            },
+           start = c(0, 0),
            output = "raster") {
     if (inherits(r, "SpatRaster")) {
       # convert to data.frame
@@ -76,8 +80,8 @@ raster_metrics <-
     # return NULL if empty
     if (nrow(st) == 0) return(NULL)
     # compute coordinates of new cell center at metrics resolution
-    dummy <- data.frame(X = round((st[, 1] - res / 2) / res) * res + res / 2, 
-                        Y = round((st[, 2] - res / 2) / res) * res + res / 2)
+    dummy <- data.frame(X = round((st[, 1] - start[1] - res / 2) / res) * res + start[1] + res / 2, 
+                        Y = round((st[, 2] - start[2]- res / 2) / res) * res + start[2] + res / 2)
     # compute metrics by grouping factor
     dummy <- lapply(split(st, list(dummy$X, dummy$Y), sep = "_"), FUN = fun)
     # convert to data.frame

@@ -4,7 +4,7 @@
 \alias{clouds_tree_metrics}
 \title{Computes metrics on trees detected in list of point clouds.}
 \usage{
-clouds_tree_metrics(llasn, XY, plot_radius, res = 0.5, func, ...)
+clouds_tree_metrics(llasn, XY, plot_radius, res = 0.5, roi = NULL, func, ...)
 }
 \arguments{
 \item{llasn}{list of \code{\link[lidR]{LAS}} objects}
@@ -15,6 +15,10 @@ clouds_tree_metrics(llasn, XY, plot_radius, res = 0.5, func, ...)
 
 \item{res}{numeric. resolution of canopy height model computed with 
 \code{\link{points2DSM}} before tree segmentation}
+
+\item{roi}{sf object. polygons corresponding to plot shapes. Only trees which
+apices are inside the polygons are retained for subsequent computations. 
+However, plot surface is still computed as pi * plot_radius^2}
 
 \item{func}{a function to be applied to the attributes of extracted trees 
 (return from internal call to \code{\link{tree_extraction}} function) to compute 
@@ -47,6 +51,8 @@ user-defined function (default is \code{\link{std_tree_metrics}})}
 LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 las_chablais3 <- lidR::readLAS(LASfile)
 
+# set number of threads
+lidR::set_lidr_threads(2)
 # extract two point clouds from LAS object
 llas <- lidR::clip_circle(las_chablais3,
                           c(974350, 974390),
@@ -63,10 +69,27 @@ user_func <- function(x) {
   dummy <- x$h[which(x$h > 20 & x$h < 30)]
   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))
 }
+XY <- data.frame(X = c(974350, 974390),
+                 Y = c(6581680, 6581680))
+clouds_tree_metrics(llas, 
+                    XY, 
+                    8, 
+                    res = 0.5, 
+                    func = user_func
+)
+#
+# same result using a user-input circular roi
+roi <- sf::st_as_sf(XY, 
+                    coords = c("X", "Y"),
+                    crs = sf::st_crs(2154)
+)
+roi <- sf::st_buffer(roi, 8)
 clouds_tree_metrics(llas,
-  cbind(c(974350, 974390), c(6581680, 6581680)),
-  8,
-  res = 0.5, func = user_func
+                    XY,
+                    8,
+                    roi = roi,
+                    res = 0.5,
+                    func = user_func
 )
 }
 \seealso{

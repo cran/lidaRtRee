@@ -1145,7 +1145,7 @@ cimg2Raster <- function(cimg, r = NULL) {
 #' filtered to avoid effect of holes on volume and surface computation
 #' @param NA_replace numeric. value to replace NA values with.
 #' @param maxpixels numeric. maximum number of pixels to be converted to cimg 
-#' (argument passed to \code{\link{as.cimg}}).
+#' (argument passed to \code{\link[imager]{as.cimg}}).
 #' @return A cimg object
 #' @examples
 #' data(chm_chablais3)

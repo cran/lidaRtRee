@@ -7,7 +7,7 @@
 boxcox_tr(x, lambda)
 }
 \arguments{
-\item{x}{vector or raster. values to be transformed}
+\item{x}{vector or raster. values to be transformed.}
 
 \item{lambda}{numeric. parameter of Box-Cox transformation}
 }

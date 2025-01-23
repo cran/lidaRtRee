@@ -11,7 +11,8 @@ aba_build_model(
   nmax = 3,
   test = c("partial_p", "vif", "gvlma"),
   xy = NULL,
-  threshold = NULL
+  threshold = NULL,
+  ...
 )
 }
 \arguments{
@@ -35,7 +36,11 @@ observations: not used in the function but exported in the result for use in
  further inference functions}
 
 \item{threshold}{vector of length two. minimum and maximum values of threshold
-to apply to predicted values}
+to apply to predicted values. Non-finite values are replaced by the minimum. 
+Values are replaced after computation of the variance of residuals used for
+bias correction}
+
+\item{...}{other parameters to be passed to \code{\link[leaps]{regsubsets}},}
 }
 \value{
 a list with three elements
@@ -76,7 +81,7 @@ LOO CV statistics are then computed.
 data(quatre_montagnes)
 # build ABA model for basal area, with all metrics as predictors
 model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
-  transform = "boxcox", nmax = 3
+  transform = "boxcox", nmax = 2
 )
 # summary of regression model
 summary(model_aba$model)

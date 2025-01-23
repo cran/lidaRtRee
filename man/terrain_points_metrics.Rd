@@ -34,6 +34,8 @@ is computed by bilinear interpolation at the center location
 otherwise it is the mean of the points altitude range.
 }
 \examples{
+# set number of threads
+lidR::set_lidr_threads(2)
 # sample points
 XYZ <- data.frame(x = runif(200, -10, 10), y = runif(200, -10, 10))
 XYZ$z <- 350 + 0.3 * XYZ$x + 0.1 * XYZ$y + rnorm(200, mean = 0, sd = 0.5)

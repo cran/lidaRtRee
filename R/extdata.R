@@ -17,8 +17,6 @@
 #' @examples
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#' # set projection information
-#' lidR::projection(las_chablais3) <- 2154
 #' las_chablais3
 #' @name las_chablais3
 NULL

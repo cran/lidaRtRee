@@ -38,7 +38,10 @@
 #' observations: not used in the function but exported in the result for use in
 #'  further inference functions
 #' @param threshold vector of length two. minimum and maximum values of threshold
-#'  to apply to predicted values
+#'  to apply to predicted values. Non-finite values are replaced by the minimum. 
+#'  Values are replaced after computation of the variance of residuals used for
+#'  bias correction
+#' @param ... other parameters to be passed to \code{\link[leaps]{regsubsets}},
 #'
 #' @seealso \code{\link{aba_combine_strata}} for combining models calibrated
 #' on different strata, \code{\link{aba_plot}} for plotting model
@@ -51,7 +54,7 @@
 #' data(quatre_montagnes)
 #' # build ABA model for basal area, with all metrics as predictors
 #' model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
-#'   transform = "boxcox", nmax = 3
+#'   transform = "boxcox", nmax = 2
 #' )
 #' # summary of regression model
 #' summary(model_aba$model)
@@ -84,7 +87,8 @@ aba_build_model <-
            nmax = 3,
            test = c("partial_p", "vif", "gvlma"),
            xy = NULL,
-           threshold = NULL) {
+           threshold = NULL,
+           ...) {
     # build data.frame with dependent variable and predictors
     df <- data.frame(dep_var = variable, predictors)
     row.names(df) <- row.names(predictors)
@@ -147,7 +151,8 @@ aba_build_model <-
           nbest = 20,
           nvmax = nmax - 1,
           method = "exhaustive",
-          really.big = TRUE
+          really.big = TRUE,
+          ...
         )
       )
     #-----------------------------------------------------------------------------
@@ -229,6 +234,7 @@ aba_build_model <-
       if (!is.null(threshold)) {
         prediction <- pmin(prediction, threshold[2])
         prediction <- pmax(prediction, threshold[1])
+        prediction[!is.finite(prediction)] <- threshold[1]
       }
       #
       #---------------------------------------------------------------------------
@@ -358,7 +364,7 @@ lma_check <- function(formule,
 #-------------------------------------------------------------------------------
 #' Box-Cox Transformation
 #'
-#' @param x vector or raster. values to be transformed
+#' @param x vector or raster. values to be transformed.
 #' @param lambda numeric. parameter of Box-Cox transformation
 #' @return a vector or raster of transformed values
 #' @seealso \code{\link{boxcox_itr}} inverse Box-Cox transformation,
@@ -385,13 +391,13 @@ lma_check <- function(formule,
 #' )
 #' @export
 boxcox_tr <- function(x, lambda) {
-  count_neg <- ifelse(inherits(x, "SpatRaster"),
-                      sum(terra::values(x < 0), na.rm = TRUE),
-                      sum(x < 0, na.rm = TRUE))
-  if (count_neg > 0) {
-    x[x < 0] <- NA
-    warning(paste0(count_neg, " negative value(s) set to NA"))
-  }
+  # count_neg <- ifelse(inherits(x, "SpatRaster"),
+  #                     sum(terra::values(x < 0), na.rm = TRUE),
+  #                     sum(x < 0, na.rm = TRUE))
+  # if (count_neg > 0) {
+  #   x[x < 0] <- NA
+  #   warning(paste0(count_neg, " negative value(s) set to NA"))
+  # }
   if (lambda != 0) {
     (x ^ lambda - 1) / lambda
   } else {
@@ -429,13 +435,13 @@ boxcox_tr <- function(x, lambda) {
 #' )
 #' @export
 boxcox_itr <- function(x, lambda) {
-  count_neg <- ifelse(inherits(x, "SpatRaster"),
-                      sum(terra::values(x < 0), na.rm = TRUE),
-                      sum(x < 0, na.rm = TRUE))
-  if (count_neg > 0) {
-    x[x < 0] <- NA
-    warning(paste0(count_neg, " negative value(s) set to NA"))
-  }
+  # count_neg <- ifelse(inherits(x, "SpatRaster"),
+  #                     sum(terra::values(x < 0), na.rm = TRUE),
+  #                     sum(x < 0, na.rm = TRUE))
+  # if (count_neg > 0) {
+  #   x[x < 0] <- NA
+  #   warning(paste0(count_neg, " negative value(s) set to NA"))
+  # }
   if (lambda != 0) {
     (lambda * x + 1) ^ (1 / lambda)
   } else {
@@ -618,9 +624,10 @@ aba_combine_strata <- function(model.list, plotsId = NULL) {
 #' @examples
 #' # load Quatre Montagnes dataset
 #' data(quatre_montagnes)
-#' # build ABA model for basal area, with all metrics as predictors
-#' model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
-#'   transform = "boxcox", nmax = 3
+#' # build ABA model for basal area, with three metrics as predictors
+#' model_aba <- aba_build_model(quatre_montagnes$G_m2_ha,
+#'                              quatre_montagnes[, c("zpcum8", "ipcumzq70", "p_hmin")],
+#'   transform = "log", nmax = 2
 #' )
 #'
 #' # plot field values VS predictions in cross-validation
@@ -697,6 +704,7 @@ aba_plot <-
 #'  \code{log} transformation case
 #' @param pkg raster output format. Use pkg = "terra|raster|stars" to get an output in SpatRaster, RasterLayer
 #' or stars format.
+#' @param ... other parameters to be passed to \code{\link[stats]{predict.lm}}, e.g. \code{interval = "prediction"},
 #' @examples
 #' # load data
 #' data(quatre_montagnes)
@@ -724,7 +732,8 @@ aba_predict <-
            metrics_map,
            stratum = NULL,
            add_error = FALSE,
-           pkg = "terra") {
+           pkg = "terra", 
+           ...) {
     # convert to terra
     if(!inherits(metrics_map, "SpatRaster")) metrics_map <- convert_raster(metrics_map, "terra")
     # create factor of stratum if not existing
@@ -757,7 +766,8 @@ aba_predict <-
       }
       # predict on all cells
       r[[stratum_label]] <- terra::predict(newdata,
-                                               model_aba$model[[stratum_label]])
+                                           model_aba$model[[stratum_label]], 
+                                           ...)
       
       if (model_aba$stats[stratum_label, "transform"] == "boxcox")
         # case of Box-Cox transform

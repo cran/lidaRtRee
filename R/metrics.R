@@ -20,9 +20,9 @@
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#' # set projection
-#' lidR::projection(las_chablais3) <- 2154
-#'
+#' 
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # extract four point clouds from LAS object
 #' llas <- list()
 #' llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)
@@ -58,7 +58,8 @@ clouds_metrics <- function(llasn,
     })
   # identify elements with no metrics computed
   dummy <- which(unlist(lapply(metrics, function(x) {
-    is.null(x)
+    # is.null(x)
+    length(x) < 1
   })))
   # combine results in a data.frame
   metrics <- lapply(metrics, function(x) {
@@ -108,7 +109,9 @@ clouds_metrics <- function(llasn,
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#'
+#' 
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # extract two point clouds from LAS object
 #' llas <- lidR::clip_circle(las_chablais3,
 #'                           c(974350, 974390),
@@ -125,31 +128,34 @@ clouds_metrics <- function(llasn,
 #' @rdname aba_metrics
 #' @export
 aba_metrics <- function(z, i, rn, c, hmin = 2, breaksH = NULL) {
-  # first return above hmin subset
-  dummy <- which(z >= hmin & rn == 1)
   # above hmin subset
   dummy2 <- which(z >= hmin)
   # non-null output only if points are present above hmin
-  if (length(dummy2) > 0) {
-    metrics <- list(
-      mCH = mean(z[dummy]), # mu_CH of Bouvier et al.
-      sdCH = stats::sd(z[dummy]), # sigma_CH of Bouvier et al
-      ntot = length(z), # total point number
-      p_1st_hmin = length(dummy) / sum(rn == 1), # percentage of 1st point above min height
-      p_hmin = length(dummy2) / length(z) # percentage of points above min height
-    )
-    #
-    if (!is.null(breaksH)) # strata relative point count
-      {
-        strata <- as.list(graphics::hist(z, breaks = breaksH, right = F, plot = F)$counts / length(z))
-        names(strata) <- gsub("-", "", paste("H_prop", breaksH[c(-length(breaksH))], "_", breaksH[c(-1)], sep = ""))
-      } else {
-      strata <- NULL
-    }
-    return(c(lidR::stdmetrics_z(z[dummy2]), lidR::stdmetrics_i(i[dummy2], z = z[dummy2], class = NULL, rn = rn[dummy2]), metrics, strata))
+  # lidR::pixel_metrics returns an error if all pixels are in this case
+  if (length(dummy2) == 0) return(NULL)
+  # first return above hmin subset
+  dummy <- which(z >= hmin & rn == 1)
+  #
+  metrics <- list(
+    mCH = mean(z[dummy]), # mu_CH of Bouvier et al.
+    sdCH = stats::sd(z[dummy]), # sigma_CH of Bouvier et al
+    ntot = length(z), # total point number
+    p_1st_hmin = length(dummy) / sum(rn == 1), # percentage of 1st point above min height
+    p_hmin = length(dummy2) / length(z) # percentage of points above min height
+  )
+  #
+  if (!is.null(breaksH)) # strata relative point count
+  {
+    strata <- as.list(graphics::hist(z, breaks = breaksH, right = F, plot = F)$counts / length(z))
+    names(strata) <- gsub("-", "", paste("H_prop", breaksH[c(-length(breaksH))], "_", breaksH[c(-1)], sep = ""))
   } else {
-    return(NULL)
+    strata <- NULL
   }
+  # lidR Z and I metrics with points above hmin
+  metrics_z <-lidR::stdmetrics_z(z[dummy2])
+  metrics_i <- lidR::stdmetrics_i(i[dummy2], z = z[dummy2], class = NULL, rn = rn[dummy2])
+  #
+  return(c(metrics_z, metrics_i, metrics, strata))
 }
 
 #' @rdname aba_metrics
@@ -231,6 +237,8 @@ std_tree_metrics <- function(x, area_ha = NA) {
 #' @return a data.frame with altitude, exposition (gr), slope (gr) and adjR2 of 
 #' plane fitting
 #' @examples
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # sample points
 #' XYZ <- data.frame(x = runif(200, -10, 10), y = runif(200, -10, 10))
 #' XYZ$z <- 350 + 0.3 * XYZ$x + 0.1 * XYZ$y + rnorm(200, mean = 0, sd = 0.5)
@@ -328,6 +336,9 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #' @param plot_radius numeric. plot radius in meters
 #' @param res numeric. resolution of canopy height model computed with 
 #' \code{\link{points2DSM}} before tree segmentation
+#' @param roi sf object. polygons corresponding to plot shapes. Only trees which
+#' apices are inside the polygons are retained for subsequent computations. 
+#' However, plot surface is still computed as pi * plot_radius^2
 #' @param func a function to be applied to the attributes of extracted trees 
 #' (return from internal call to \code{\link{tree_extraction}} function) to compute 
 #' plot level metrics
@@ -341,6 +352,8 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
 #'
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # extract two point clouds from LAS object
 #' llas <- lidR::clip_circle(las_chablais3,
 #'                           c(974350, 974390),
@@ -357,15 +370,33 @@ terrain_points_metrics <- function(p, centre = NULL, r = NULL) {
 #'   dummy <- x$h[which(x$h > 20 & x$h < 30)]
 #'   data.frame(Tree.between.20.30 = length(dummy), Tree.meanH = mean(dummy))
 #' }
+#' XY <- data.frame(X = c(974350, 974390),
+#'                  Y = c(6581680, 6581680))
+#' clouds_tree_metrics(llas, 
+#'                     XY, 
+#'                     8, 
+#'                     res = 0.5, 
+#'                     func = user_func
+#' )
+#' #
+#' # same result using a user-input circular roi
+#' roi <- sf::st_as_sf(XY, 
+#'                     coords = c("X", "Y"),
+#'                     crs = sf::st_crs(2154)
+#' )
+#' roi <- sf::st_buffer(roi, 8)
 #' clouds_tree_metrics(llas,
-#'   cbind(c(974350, 974390), c(6581680, 6581680)),
-#'   8,
-#'   res = 0.5, func = user_func
+#'                     XY,
+#'                     8,
+#'                     roi = roi,
+#'                     res = 0.5,
+#'                     func = user_func
 #' )
 #' @export
 #'
-clouds_tree_metrics <- function(llasn, XY, plot_radius, res = 0.5, func, ...) {
+clouds_tree_metrics <- function(llasn, XY, plot_radius, res = 0.5, roi = NULL, func, ...) {
   plot_area_ha <- pi * plot_radius^2 / 10000
+  if(!is.null(roi)) roi <- sf::st_geometry(roi)
   if (missing(func)) {
     func <- function(x) {
       std_tree_metrics(x, area_ha = plot_area_ha)
@@ -389,7 +420,13 @@ clouds_tree_metrics <- function(llasn, XY, plot_radius, res = 0.5, func, ...) {
     # tree detection
     dummy <- tree_segmentation(dummy, ...)
     # compute mask of area of interest
-    mask <- raster_xy_mask(coord, plot_radius, dummy$local_maxima, binary = TRUE)
+    if (!is.null(roi))
+    {
+      mask <- terra::rasterize(terra::vect(roi[i]),
+                               dummy$local_maxima, background = 0)
+    } else {
+      mask <- raster_xy_mask(coord, plot_radius, dummy$local_maxima, binary = TRUE)
+    }
     # tree extraction
     ltrees[[names(llasn)[i]]] <- tree_extraction(dummy, r_mask = mask)
     # compute tree canopy cover fraction and mean height inside area of interest

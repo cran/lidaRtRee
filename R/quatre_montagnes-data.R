@@ -25,7 +25,7 @@
 #'
 #' @keywords datasets
 #'
-#' @references Monnet, J.-M. 2021. Tutorial on modeling forest parameters with ALS data. ABA data preparation \url{https://gitlab.irstea.fr/jean-matthieu.monnet/lidartree_tutorials/-/wikis/ABA-data-preparation}
+#' @references Monnet, J.-M. 2021. Tutorial on modeling forest parameters with ALS data. ABA data preparation \url{https://lidar.pages.mia.inra.fr/lidaRtRee/articles/area-based.1.data.preparation.html}
 #'
 #' @examples
 #' data(quatre_montagnes)

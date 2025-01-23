@@ -13,7 +13,7 @@ filtered to avoid effect of holes on volume and surface computation}
 \item{NA_replace}{numeric. value to replace NA values with.}
 
 \item{maxpixels}{numeric. maximum number of pixels to be converted to cimg 
-(argument passed to \code{\link{as.cimg}}).}
+(argument passed to \code{\link[imager]{as.cimg}}).}
 }
 \value{
 A cimg object

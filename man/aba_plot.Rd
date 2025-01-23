@@ -30,9 +30,10 @@ Plots observed VS values predicted in leave one out cross validation of an
 \examples{
 # load Quatre Montagnes dataset
 data(quatre_montagnes)
-# build ABA model for basal area, with all metrics as predictors
-model_aba <- aba_build_model(quatre_montagnes$G_m2_ha, quatre_montagnes[, 9:76],
-  transform = "boxcox", nmax = 3
+# build ABA model for basal area, with three metrics as predictors
+model_aba <- aba_build_model(quatre_montagnes$G_m2_ha,
+                             quatre_montagnes[, c("zpcum8", "ipcumzq70", "p_hmin")],
+  transform = "log", nmax = 2
 )
 
 # plot field values VS predictions in cross-validation

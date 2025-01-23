@@ -28,9 +28,9 @@ on each element and then arranges the results in a data.frame.
 # load LAS file
 LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 las_chablais3 <- lidR::readLAS(LASfile)
-# set projection
-lidR::projection(las_chablais3) <- 2154
 
+# set number of threads
+lidR::set_lidr_threads(2)
 # extract four point clouds from LAS object
 llas <- list()
 llas[["A"]] <- lidR::clip_circle(las_chablais3, 974350, 6581680, 10)

@@ -16,8 +16,6 @@
 aa_las_chablais3 <- function() {
   LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
   las_chablais3 <- lidR::readLAS(LASfile)
-  # set projection
-  lidR::projection(las_chablais3) <- 2154
   las_chablais3
 }
 
@@ -43,9 +41,9 @@ aa_las_chablais3 <- function() {
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#' # set projection
-#' lidR::projection(las_chablais3) <- 2154
 #'
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # create a digital surface model with first-return points, resolution 0.5 m
 #' dsm <- points2DSM(lidR::filter_first(las_chablais3), res = 0.5)
 #'
@@ -95,9 +93,9 @@ points2DSM <- function(.las, res = 1, xmin, xmax, ymin, ymax) {
 #' # load LAS file
 #' LASfile <- system.file("extdata", "las_chablais3.laz", package="lidaRtRee")
 #' las_chablais3 <- lidR::readLAS(LASfile)
-#' # set projection
-#' lidR::projection(las_chablais3) <- 2154
-#'
+#' 
+#' # set number of threads
+#' lidR::set_lidr_threads(2)
 #' # create digital terrain model with points classified as ground
 #' dtm <- points2DTM(las_chablais3)
 #'
@@ -663,7 +661,7 @@ pointList2poly <- function(points_list, df = NULL, ...) {
 #'
 #' @param r raster object or file name.
 #' @param pkg package name. Use pkg = "terra|
-#' raster|stars" to get an output in SpatRaster, RasterLayer or stars format 
+#' stars" to get an output in SpatRaster or stars format 
 #' @return A raster object in the specified format
 #' @examples
 #' # load SpatRaster
@@ -675,15 +673,8 @@ pointList2poly <- function(points_list, df = NULL, ...) {
 #' # to stars
 #' # chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
 #' # chm_stars
+#' # convert_raster(chm_stars, pkg = "terra")
 #' # }
-#' if (require("raster"))
-#' {
-#' # to raster
-#' chm_raster <- convert_raster(chm_chablais3, pkg = "raster")
-#' chm_raster
-#' # back to terra
-#' convert_raster(chm_raster, pkg = "terra")
-#' }
 #' @export
 convert_raster <- function(r, pkg = NULL) {
   # default option corresponds to lidR package 
@@ -712,14 +703,6 @@ convert_raster <- function(r, pkg = NULL) {
     } else {
       r <- stars::st_as_stars(r)
     }
-  }
-  if (pkg == "raster")
-  {
-    if (inherits(r, "stars"))
-    {
-      r <- terra::rast(r)
-    }
-    r <- raster::raster(r)
   }
   if (!is.null(dummy_names)) names(r) <- dummy_names
   r

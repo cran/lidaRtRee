@@ -97,7 +97,7 @@ gap_detection <-
       options <- list(automerge = TRUE)
       #
       # check buffer size
-      if (lidR::opt_chunk_buffer(las) < 10)
+      if (lidR::opt_chunk_buffer(las) < 20)
         warning("For gap detection a buffer larger than 20 m is recommended to avoid border effects")
       # apply function to catalog
       output <- lidR::catalog_apply(

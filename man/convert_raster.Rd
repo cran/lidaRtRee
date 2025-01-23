@@ -10,7 +10,7 @@ convert_raster(r, pkg = NULL)
 \item{r}{raster object or file name.}
 
 \item{pkg}{package name. Use pkg = "terra|
-raster|stars" to get an output in SpatRaster, RasterLayer or stars format}
+stars" to get an output in SpatRaster or stars format}
 }
 \value{
 A raster object in the specified format
@@ -29,13 +29,6 @@ chm_chablais3 <- terra::rast(chm_chablais3)
 # to stars
 # chm_stars <- convert_raster(chm_chablais3, pkg = "stars")
 # chm_stars
+# convert_raster(chm_stars, pkg = "terra")
 # }
-if (require("raster"))
-{
-# to raster
-chm_raster <- convert_raster(chm_chablais3, pkg = "raster")
-chm_raster
-# back to terra
-convert_raster(chm_raster, pkg = "terra")
-}
 }

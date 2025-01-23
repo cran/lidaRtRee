@@ -7,7 +7,7 @@
 #'
 #' Computes vegetation indices from the Red, Green and Infra-Red bands of an IRC
 #' image and adds them as additional bands or columns. Acronyms are listed on
-#' \url{https://www.l3harrisgeospatial.com/docs/broadbandgreenness.html}. If the 
+#' \url{https://www.nv5geospatialsoftware.com/docs/BroadbandGreenness.html}. If the 
 #' Blue band is also present, additional indices are computed.
 #'
 #' @param r raster or data.frame. Should contain bands or columns with
